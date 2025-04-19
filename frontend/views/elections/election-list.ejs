@@ -1,0 +1,11 @@
+<!-- views/vote/election-list.ejs -->
+<h2>Select an Election</h2>
+<ul>
+  <% elections.forEach(election => { %>
+  <li>
+    <a href="/api/elections/<%= election._id %>"
+      ><%= election.type %> - Ends on <%= election.endDate.toDateString() %></a
+    >
+  </li>
+  <% }) %>
+</ul>

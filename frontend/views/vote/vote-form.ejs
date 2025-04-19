@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cast Vote</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container py-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="mb-4 text-center">Cast Your Vote</h3>
+
+          <form action="/api/votes/cast" method="POST">
+            <!-- Hidden Inputs -->
+            <input type="hidden" name="electionId" value="<%= electionId %>" />
+            <input
+              type="hidden"
+              name="candidateId"
+              value="<%= candidateId %>"
+            />
+
+            <!-- Age -->
+            <div class="mb-3">
+              <label for="age" class="form-label">Age</label>
+              <input type="number" name="age" class="form-control" required />
+            </div>
+
+            <!-- Gender -->
+            <div class="mb-3">
+              <label class="form-label">Gender</label>
+              <select name="gender" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Highest Education -->
+            <div class="mb-3">
+              <label class="form-label">Highest Education</label>
+              <select name="highestEducation" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="none">None</option>
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+                <option value="diploma">Diploma</option>
+                <option value="bachelor">Bachelor</option>
+                <option value="master">Master</option>
+                <option value="PhD">PhD</option>
+              </select>
+            </div>
+
+            <!-- Employment Status -->
+            <div class="mb-3">
+              <label class="form-label">Employment Status</label>
+              <select name="employmentStatus" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="employed">Employed</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="self-employed">Self-employed</option>
+                <option value="student">Student</option>
+              </select>
+            </div>
+
+            <!-- Marital Status -->
+            <div class="mb-3">
+              <label class="form-label">Marital Status</label>
+              <select name="maritalStatus" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="married parent">Married Parent</option>
+                <option value="single mom">Single Mom</option>
+                <option value="single dad">Single Dad</option>
+              </select>
+            </div>
+
+            <!-- Religious Status -->
+            <div class="mb-3">
+              <label class="form-label">Religious Status</label>
+              <select name="religiousStatus" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="not religious">Not Religious</option>
+                <option value="slightly religious">Slightly Religious</option>
+                <option value="very religious">Very Religious</option>
+              </select>
+            </div>
+
+            <!-- Dwelling Type -->
+            <div class="mb-3">
+              <label class="form-label">Dwelling Type</label>
+              <select name="dwellingType" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="urban">Urban</option>
+                <option value="rural">Rural</option>
+              </select>
+            </div>
+
+            <!-- Family Dwelling Type -->
+            <div class="mb-3">
+              <label class="form-label">Family Dwelling Type</label>
+              <select name="familyDwellingType" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="urban">Urban</option>
+                <option value="rural">Rural</option>
+              </select>
+            </div>
+
+            <!-- Province of Study -->
+            <div class="mb-3">
+              <label class="form-label">Province of Study</label>
+              <input
+                type="text"
+                name="provinceOfStudy"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- School Completion Location -->
+            <div class="mb-3">
+              <label class="form-label">School Completion Location</label>
+              <input
+                type="text"
+                name="schoolCompletionLocation"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- Average Monthly Rent -->
+            <div class="mb-3">
+              <label class="form-label">Average Monthly Rent (ZMW)</label>
+              <input
+                type="number"
+                name="averageMonthlyRent"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- Sector of Operation -->
+            <div class="mb-3">
+              <label class="form-label">Sector of Operation</label>
+              <select name="sectorOfOperation" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="marketeer">Marketeer</option>
+                <option value="online trader">Online Trader</option>
+                <option value="shop owner">Shop Owner</option>
+                <option value="street vendor">Street Vendor</option>
+                <option value="other side hustles">Other Side Hustles</option>
+              </select>
+            </div>
+
+            <!-- Dislikes About Candidate -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Dislikes About Candidate (Optional)</label
+              >
+              <textarea
+                name="dislikesAboutCandidate"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+
+            <!-- Expectations From Candidate -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Expectations From Candidate (Optional)</label
+              >
+              <textarea
+                name="expectationsFromCandidate"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+
+            <!-- Relative Vote Likelihood -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Likelihood Relatives Will Vote Same (1-10)</label
+              >
+              <input
+                type="number"
+                name="relativeVoteLikelihood"
+                min="1"
+                max="10"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- Reason For Relative Vote -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Reason for Relatives’ Voting Choice</label
+              >
+              <textarea
+                name="reasonForRelativeVote"
+                class="form-control"
+                rows="2"
+                required
+              ></textarea>
+            </div>
+
+            <!-- Reason For Voting -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Why Did You Vote For This Candidate?</label
+              >
+              <textarea
+                name="reasonForVoting"
+                class="form-control"
+                rows="2"
+                required
+              ></textarea>
+            </div>
+
+            <!-- Usual Party Support -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Which Party Do You Usually Support?</label
+              >
+              <input
+                type="text"
+                name="usualPartySupport"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- Familiar With Policies -->
+            <div class="mb-3">
+              <label class="form-label"
+                >Are You Familiar With Candidate’s Policies?</label
+              >
+              <select name="familiarWithPolicies" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <!-- Policy Understanding -->
+            <div class="mb-3">
+              <label class="form-label"
+                >What Do You Understand About Their Policies? (Optional)</label
+              >
+              <textarea
+                name="policyUnderstanding"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary px-4">
+                Submit Vote
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

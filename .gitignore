@@ -1,0 +1,45 @@
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Optional: log files or error dumps
+*.log
+*.tsbuildinfo
+
+# Coverage (if you use testing tools)
+coverage/
+
+# PM2 logs (if you deploy with PM2)
+pids/
+logs/
+
+# Optional: SQLite DB or other local dev files
+*.sqlite
+*.sqlite3
+*.db
+
+# Optional: upload folders, temp files
+uploads/
+tmp/

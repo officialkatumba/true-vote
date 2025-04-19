@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Welcome to TrueVote</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <%- include('partials/navbar') %>
+
+    <main class="container">
+      <h1>Welcome to TrueVote</h1>
+      <p>Your voice. Your choice. Cast your vote now.</p>
+      <% if (!user) { %>
+      <a href="api/candidates/register">Register</a> |
+      <a href="api/users/login">Login</a>
+      <% } else { %>
+      <a href="/dashboard">Go to Dashboard</a>
+      <% } %>
+    </main>
+  </body>
+</html>

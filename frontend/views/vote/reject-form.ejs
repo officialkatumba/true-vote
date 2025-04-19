@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reject Candidate</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container py-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="mb-4 text-center text-danger">
+            Why Are You Rejecting This Candidate?
+          </h3>
+
+          <form action="/api/votes/<%= election._id %>/reject" method="POST">
+            <input
+              type="hidden"
+              name="electionId"
+              value="<%= election._id %>"
+            />
+
+            <div class="mb-3">
+              <label class="form-label"
+                >Reason for Rejecting the Candidate</label
+              >
+              <textarea
+                name="reason"
+                class="form-control"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="relativeVoteLikelihood" class="form-label">
+                Will You Ask Friends/Family to Reject This Candidate Too?
+              </label>
+              <select
+                name="relativeVoteLikelihood"
+                id="relativeVoteLikelihood"
+                class="form-select"
+                required
+              >
+                <option value="">-- Select an Option --</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Age</label>
+              <input type="number" name="age" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Gender</label>
+              <select name="gender" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Highest Level of Education</label>
+              <select name="highestEducation" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="none">None</option>
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+                <option value="diploma">Diploma</option>
+                <option value="bachelor">Bachelor</option>
+                <option value="master">Master</option>
+                <option value="PhD">PhD</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Employment Status</label>
+              <select name="employmentStatus" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="employed">Employed</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="self-employed">Self-Employed</option>
+                <option value="student">Student</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Marital Status</label>
+              <select name="maritalStatus" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="married parent">Married Parent</option>
+                <option value="single mom">Single Mom</option>
+                <option value="single dad">Single Dad</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Religious Status</label>
+              <select name="religiousStatus" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="not religious">Not Religious</option>
+                <option value="slightly religious">Slightly Religious</option>
+                <option value="very religious">Very Religious</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Where Do You Live?</label>
+              <select name="dwellingType" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="urban">Urban</option>
+                <option value="rural">Rural</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Where Do/DID Your Parents Live?</label>
+              <select name="familyDwellingType" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="urban">Urban</option>
+                <option value="rural">Rural</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="provinceOfStudy" class="form-label"
+                >Province Where You Started School</label
+              >
+              <select
+                class="form-select"
+                id="provinceOfStudy"
+                name="provinceOfStudy"
+                required
+              >
+                <option value="" disabled selected>Select Province</option>
+                <% ["Central", "Copperbelt", "Eastern", "Luapula", "Lusaka",
+                "Muchinga", "North-Western", "Northern", "Southern",
+                "Western"].forEach(function(province) { %>
+                <option value="<%= province %>"><%= province %></option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="schoolCompletionLocation" class="form-label"
+                >Province Where You Completed School</label
+              >
+              <select
+                class="form-select"
+                id="schoolCompletionLocation"
+                name="schoolCompletionLocation"
+                required
+              >
+                <option value="" disabled selected>Select Province</option>
+                <% ["Central", "Copperbelt", "Eastern", "Luapula", "Lusaka",
+                "Muchinga", "North-Western", "Northern", "Southern",
+                "Western"].forEach(function(province) { %>
+                <option value="<%= province %>"><%= province %></option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="constituency" class="form-label">
+                Which Constituency Will You Vote From in 2026?
+              </label>
+              <select
+                class="form-select"
+                id="constituency"
+                name="constituency"
+                required
+              >
+                <option value="" disabled selected>
+                  Select Your Constituency
+                </option>
+
+                <optgroup label="Central Province">
+                  <option value="Chisamba">Chisamba</option>
+                  <option value="Chitambo">Chitambo</option>
+                  <option value="Itezhi-Tezhi">Itezhi-Tezhi</option>
+                  <option value="Kabwe Central">Kabwe Central</option>
+                  <option value="Kapiri Mposhi">Kapiri Mposhi</option>
+                  <option value="Keembe">Keembe</option>
+                  <option value="Katuba">Katuba</option>
+                  <option value="Mumbwa">Mumbwa</option>
+                  <option value="Ngabwe">Ngabwe</option>
+                  <option value="Serenje">Serenje</option>
+                </optgroup>
+
+                <optgroup label="Copperbelt Province">
+                  <option value="Bwana Mkubwa">Bwana Mkubwa</option>
+                  <option value="Chifubu">Chifubu</option>
+                  <option value="Chililabombwe">Chililabombwe</option>
+                  <option value="Kamfinsa">Kamfinsa</option>
+                  <option value="Kantanshi">Kantanshi</option>
+                  <option value="Luanshya">Luanshya</option>
+                  <option value="Masaiti">Masaiti</option>
+                  <option value="Mpongwe">Mpongwe</option>
+                  <option value="Mwansabombwe">Mwansabombwe</option>
+                  <option value="Ndola Central">Ndola Central</option>
+                  <option value="Nkana">Nkana</option>
+                  <option value="Roan">Roan</option>
+                  <option value="Wusakile">Wusakile</option>
+                </optgroup>
+
+                <optgroup label="Eastern Province">
+                  <option value="Chadiza">Chadiza</option>
+                  <option value="Chasefu">Chasefu</option>
+                  <option value="Chipangali">Chipangali</option>
+                  <option value="Chipata Central">Chipata Central</option>
+                  <option value="Kasenengwa">Kasenengwa</option>
+                  <option value="Lumezi">Lumezi</option>
+                  <option value="Lundazi">Lundazi</option>
+                  <option value="Mambwe">Mambwe</option>
+                  <option value="Msanzala">Msanzala</option>
+                  <option value="Nyimba">Nyimba</option>
+                  <option value="Petauke Central">Petauke Central</option>
+                  <option value="Sinda">Sinda</option>
+                  <option value="Vubwi">Vubwi</option>
+                </optgroup>
+
+                <optgroup label="Luapula Province">
+                  <option value="Bahati">Bahati</option>
+                  <option value="Chembe">Chembe</option>
+                  <option value="Chienge">Chienge</option>
+                  <option value="Chipili">Chipili</option>
+                  <option value="Kawambwa">Kawambwa</option>
+                  <option value="Luapula">Luapula</option>
+                  <option value="Mansa Central">Mansa Central</option>
+                  <option value="Milenge">Milenge</option>
+                  <option value="Mwense">Mwense</option>
+                  <option value="Nchelenge">Nchelenge</option>
+                  <option value="Samfya">Samfya</option>
+                </optgroup>
+
+                <optgroup label="Lusaka Province">
+                  <option value="Chilanga">Chilanga</option>
+                  <option value="Chongwe">Chongwe</option>
+                  <option value="Kafue">Kafue</option>
+                  <option value="Luangwa">Luangwa</option>
+                  <option value="Lusaka Central">Lusaka Central</option>
+                  <option value="Chawama">Chawama</option>
+                  <option value="Kanyama">Kanyama</option>
+                  <option value="Kabwata">Kabwata</option>
+                  <option value="Matero">Matero</option>
+                  <option value="Munali">Munali</option>
+                  <option value="Mandevu">Mandevu</option>
+                  <option value="Rufunsa">Rufunsa</option>
+                </optgroup>
+
+                <optgroup label="Muchinga Province">
+                  <option value="Chama North">Chama North</option>
+                  <option value="Chama South">Chama South</option>
+                  <option value="Chinsali">Chinsali</option>
+                  <option value="Isoka">Isoka</option>
+                  <option value="Kanchibiya">Kanchibiya</option>
+                  <option value="Mpika">Mpika</option>
+                  <option value="Mafinga">Mafinga</option>
+                  <option value="Shiwangandu">Shiwangandu</option>
+                  <option value="Nakonde">Nakonde</option>
+                </optgroup>
+
+                <optgroup label="Northern Province">
+                  <option value="Chilubi">Chilubi</option>
+                  <option value="Kaputa">Kaputa</option>
+                  <option value="Kasama Central">Kasama Central</option>
+                  <option value="Lupososhi">Lupososhi</option>
+                  <option value="Mbala">Mbala</option>
+                  <option value="Mpulungu">Mpulungu</option>
+                  <option value="Mporokoso">Mporokoso</option>
+                  <option value="Luwingu">Luwingu</option>
+                </optgroup>
+
+                <optgroup label="North-Western Province">
+                  <option value="Chavuma">Chavuma</option>
+                  <option value="Kabompo">Kabompo</option>
+                  <option value="Kasempa">Kasempa</option>
+                  <option value="Manyinga">Manyinga</option>
+                  <option value="Mufumbwe">Mufumbwe</option>
+                  <option value="Mushindamo">Mushindamo</option>
+                  <option value="Solwezi Central">Solwezi Central</option>
+                  <option value="Solwezi East">Solwezi East</option>
+                  <option value="Solwezi West">Solwezi West</option>
+                  <option value="Zambezi East">Zambezi East</option>
+                  <option value="Zambezi West">Zambezi West</option>
+                </optgroup>
+
+                <optgroup label="Southern Province">
+                  <option value="Bweengwa">Bweengwa</option>
+                  <option value="Chikankata">Chikankata</option>
+                  <option value="Choma Central">Choma Central</option>
+                  <option value="Gwembe">Gwembe</option>
+                  <option value="Kalomo Central">Kalomo Central</option>
+                  <option value="Livingstone">Livingstone</option>
+                  <option value="Mapatizya">Mapatizya</option>
+                  <option value="Mazabuka Central">Mazabuka Central</option>
+                  <option value="Monze Central">Monze Central</option>
+                  <option value="Namwala">Namwala</option>
+                  <option value="Pemba">Pemba</option>
+                  <option value="Siavonga">Siavonga</option>
+                  <option value="Sinazongwe">Sinazongwe</option>
+                </optgroup>
+
+                <optgroup label="Western Province">
+                  <option value="Kalabo">Kalabo</option>
+                  <option value="Kaoma">Kaoma</option>
+                  <option value="Lukulu West">Lukulu West</option>
+                  <option value="Lukulu East">Lukulu East</option>
+                  <option value="Mongu Central">Mongu Central</option>
+                  <option value="Nalolo">Nalolo</option>
+                  <option value="Senanga">Senanga</option>
+                  <option value="Sesheke">Sesheke</option>
+                  <option value="Shangombo">Shangombo</option>
+                  <option value="Sikongo">Sikongo</option>
+                </optgroup>
+
+                <optgroup label="Other">
+                  <option value="Other/Unknown">Other/Unknown</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="district" class="form-label"
+                >Which District do you reside now?</label
+              >
+              <select
+                class="form-select"
+                id="district"
+                name="district"
+                required
+              >
+                <option value="" disabled selected>Select Your District</option>
+
+                <optgroup label="Central Province">
+                  <option value="Chibombo">Chibombo</option>
+                  <option value="Chisamba">Chisamba</option>
+                  <option value="Chitambo">Chitambo</option>
+                  <option value="Itezhi-Tezhi">Itezhi-Tezhi</option>
+                  <option value="Kabwe">Kabwe</option>
+                  <option value="Kapiri Mposhi">Kapiri Mposhi</option>
+                  <option value="Luano">Luano</option>
+                  <option value="Mkushi">Mkushi</option>
+                  <option value="Mumbwa">Mumbwa</option>
+                  <option value="Ngabwe">Ngabwe</option>
+                  <option value="Serenje">Serenje</option>
+                  <option value="Shibuyunji">Shibuyunji</option>
+                </optgroup>
+
+                <optgroup label="Copperbelt Province">
+                  <option value="Chililabombwe">Chililabombwe</option>
+                  <option value="Chingola">Chingola</option>
+                  <option value="Kalulushi">Kalulushi</option>
+                  <option value="Kitwe">Kitwe</option>
+                  <option value="Luanshya">Luanshya</option>
+                  <option value="Lufwanyama">Lufwanyama</option>
+                  <option value="Masaiti">Masaiti</option>
+                  <option value="Mpongwe">Mpongwe</option>
+                  <option value="Mufulira">Mufulira</option>
+                  <option value="Ndola">Ndola</option>
+                </optgroup>
+
+                <optgroup label="Eastern Province">
+                  <option value="Chadiza">Chadiza</option>
+                  <option value="Chama">Chama</option>
+                  <option value="Chasefu">Chasefu</option>
+                  <option value="Chipangali">Chipangali</option>
+                  <option value="Chipata">Chipata</option>
+                  <option value="Kasenengwa">Kasenengwa</option>
+                  <option value="Katete">Katete</option>
+                  <option value="Lumezi">Lumezi</option>
+                  <option value="Lundazi">Lundazi</option>
+                  <option value="Lusangazi">Lusangazi</option>
+                  <option value="Mambwe">Mambwe</option>
+                  <option value="Nyimba">Nyimba</option>
+                  <option value="Petauke">Petauke</option>
+                  <option value="Sinda">Sinda</option>
+                  <option value="Vubwi">Vubwi</option>
+                </optgroup>
+
+                <optgroup label="Luapula Province">
+                  <option value="Chembe">Chembe</option>
+                  <option value="Chiengi">Chiengi</option>
+                  <option value="Chifunabuli">Chifunabuli</option>
+                  <option value="Chipili">Chipili</option>
+                  <option value="Kawambwa">Kawambwa</option>
+                  <option value="Lunga">Lunga</option>
+                  <option value="Mansa">Mansa</option>
+                  <option value="Milenge">Milenge</option>
+                  <option value="Mwansabombwe">Mwansabombwe</option>
+                  <option value="Mwense">Mwense</option>
+                  <option value="Nchelenge">Nchelenge</option>
+                  <option value="Samfya">Samfya</option>
+                </optgroup>
+
+                <optgroup label="Lusaka Province">
+                  <option value="Chilanga">Chilanga</option>
+                  <option value="Chongwe">Chongwe</option>
+                  <option value="Kafue">Kafue</option>
+                  <option value="Luangwa">Luangwa</option>
+                  <option value="Lusaka">Lusaka</option>
+                  <option value="Rufunsa">Rufunsa</option>
+                </optgroup>
+
+                <optgroup label="Muchinga Province">
+                  <option value="Chinsali">Chinsali</option>
+                  <option value="Isoka">Isoka</option>
+                  <option value="Kanchibiya">Kanchibiya</option>
+                  <option value="Lavushimanda">Lavushimanda</option>
+                  <option value="Mafinga">Mafinga</option>
+                  <option value="Mpika">Mpika</option>
+                  <option value="Nakonde">Nakonde</option>
+                  <option value="Shiwang'andu">Shiwang'andu</option>
+                </optgroup>
+
+                <optgroup label="Northern Province">
+                  <option value="Chilubi">Chilubi</option>
+                  <option value="Kaputa">Kaputa</option>
+                  <option value="Kasama">Kasama</option>
+                  <option value="Lunte">Lunte</option>
+                  <option value="Lupososhi">Lupososhi</option>
+                  <option value="Luwingu">Luwingu</option>
+                  <option value="Mbala">Mbala</option>
+                  <option value="Mporokoso">Mporokoso</option>
+                  <option value="Mpulungu">Mpulungu</option>
+                  <option value="Mungwi">Mungwi</option>
+                  <option value="Nsama">Nsama</option>
+                  <option value="Senga Hill">Senga Hill</option>
+                </optgroup>
+
+                <optgroup label="North-Western Province">
+                  <option value="Chavuma">Chavuma</option>
+                  <option value="Ikelenge">Ikelenge</option>
+                  <option value="Kabompo">Kabompo</option>
+                  <option value="Kalumbila">Kalumbila</option>
+                  <option value="Kasempa">Kasempa</option>
+                  <option value="Manyinga">Manyinga</option>
+                  <option value="Mufumbwe">Mufumbwe</option>
+                  <option value="Mushindamo">Mushindamo</option>
+                  <option value="Mwinilunga">Mwinilunga</option>
+                  <option value="Solwezi">Solwezi</option>
+                  <option value="Zambezi">Zambezi</option>
+                </optgroup>
+
+                <optgroup label="Southern Province">
+                  <option value="Chikankata">Chikankata</option>
+                  <option value="Chirundu">Chirundu</option>
+                  <option value="Choma">Choma</option>
+                  <option value="Gwembe">Gwembe</option>
+                  <option value="Itezhi-Tezhi">Itezhi-Tezhi</option>
+                  <option value="Kalomo">Kalomo</option>
+                  <option value="Kazungula">Kazungula</option>
+                  <option value="Livingstone">Livingstone</option>
+                  <option value="Mazabuka">Mazabuka</option>
+                  <option value="Monze">Monze</option>
+                  <option value="Namwala">Namwala</option>
+                  <option value="Pemba">Pemba</option>
+                  <option value="Siavonga">Siavonga</option>
+                  <option value="Sinazongwe">Sinazongwe</option>
+                  <option value="Zimba">Zimba</option>
+                </optgroup>
+
+                <optgroup label="Western Province">
+                  <option value="Kalabo">Kalabo</option>
+                  <option value="Kaoma">Kaoma</option>
+                  <option value="Limulunga">Limulunga</option>
+                  <option value="Luampa">Luampa</option>
+                  <option value="Lukulu">Lukulu</option>
+                  <option value="Mitete">Mitete</option>
+                  <option value="Mongu">Mongu</option>
+                  <option value="Mulobezi">Mulobezi</option>
+                  <option value="Mwandi">Mwandi</option>
+                  <option value="Nalolo">Nalolo</option>
+                  <option value="Nkeyema">Nkeyema</option>
+                  <option value="Senanga">Senanga</option>
+                  <option value="Sesheke">Sesheke</option>
+                  <option value="Shang'ombo">Shang'ombo</option>
+                  <option value="Sikongo">Sikongo</option>
+                  <option value="Sioma">Sioma</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Average Monthly Rent (ZMW)</label>
+              <input
+                type="number"
+                name="averageMonthlyRent"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Sector of Operation</label>
+              <select name="sectorOfOperation" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="marketeer">Marketeer</option>
+                <option value="online trader">Online Trader</option>
+                <option value="cross-border trader">Cross-Border Trader</option>
+                <option value="shop owner">Small Business Owner</option>
+                <option value="street vendor">Street Vendor</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Dislikes About the Candidate</label>
+              <textarea
+                name="dislikesAboutCandidate"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"
+                >Expectations from a Good Candidate</label
+              >
+              <textarea
+                name="expectationsFromCandidate"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"
+                >Why Might Your Friends/Family Reject This Candidate?</label
+              >
+              <textarea
+                name="reasonForRelativeVote"
+                class="form-control"
+                rows="2"
+                required
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"
+                >Which Party Do You Usually Support?</label
+              >
+              <input
+                type="text"
+                name="usualPartySupport"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"
+                >Are You Familiar with This Candidate’s Policies?</label
+              >
+              <select name="familiarWithPolicies" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"
+                >What Was Unclear About Their Policies?</label
+              >
+              <textarea
+                name="policyUnderstanding"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+
+            <div class="text-center">
+              <button type="submit" class="btn btn-danger px-4">
+                Submit Rejection
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

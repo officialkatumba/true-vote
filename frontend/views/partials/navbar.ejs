@@ -1,0 +1,15 @@
+<nav>
+  <a href="/">Home</a>
+
+  <% if (user) { %>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/api/elections">All Elections</a>
+  <a href="/logout">Logout</a>
+  <% } else { %>
+  <a href="/api/users/login">Login</a>
+  <a href="/api/candidates/register">Register</a>
+  <a href="/api/elections">All Elections</a>
+  <!-- ✅ Here too -->
+  <% } %>
+</nav>
+<hr />
