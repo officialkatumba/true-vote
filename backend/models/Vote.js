@@ -67,20 +67,21 @@ const voteSchema = new mongoose.Schema({
   // 🔹 Education & Background
   provinceOfStudy: { type: String, required: true }, // Province where voter studied
   schoolCompletionLocation: { type: String, required: true }, // Where they completed school
+  district: String,
+  constituency: String,
 
   // 🔹 Financial Status (Captured Discreetly)
   averageMonthlyRent: { type: Number, required: true }, // Voter's financial situation
   sectorOfOperation: {
     type: String,
-    required: true,
     enum: [
       "marketeer",
       "online trader",
-      "shop owner",
+      "cross-border trader",
+      "small business Owner",
       "street vendor",
-      "other side hustles",
     ],
-  }, // Employment sector
+  },
 
   dislikesAboutCandidate: {
     type: String,
@@ -95,7 +96,7 @@ const voteSchema = new mongoose.Schema({
   }, // Optional: Captures what the voter wants the candidate to do or stand for (helps in shaping campaign messaging)
 
   // 🔹 Influence of Close Relatives & Friends
-  relativeVoteLikelihood: { type: Number, required: true, min: 1, max: 10 }, // Probability close relatives/friends will vote for the same candidate
+  relativeVoteLikelihood: { type: Boolean, required: true },
   reasonForRelativeVote: { type: String, required: true }, // Explanation of why relatives/friends might vote for or against the candidate
 
   // 🔹 Personal Voting Decision
