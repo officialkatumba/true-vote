@@ -116,110 +116,161 @@ exports.getMyElections = async (req, res) => {
   }
 };
 
-// // // GET /elections/:id – View election details
+// GET /elections/participated - Elections the candidate has joined (not necessarily created)
+exports.getParticipatedElections = async (req, res) => {
+  try {
+    const candidateId = req.user.candidate._id;
 
-// exports.getElection = async (req, res) => {
+    const elections = await Election.find({
+      candidates: candidateId,
+    })
+      .sort({ startDate: -1 })
+      .populate("candidates");
+
+    // Generate vote summary per election (needed for AI insights table)
+    const voteMap = {};
+
+    for (const election of elections) {
+      const candidateStats = election.votes?.find(
+        (vote) => vote.candidate.toString() === candidateId.toString()
+      );
+
+      voteMap[election._id.toString()] = {
+        votes: candidateStats?.votes || 0,
+        voteLost: candidateStats?.voteLost || 0,
+      };
+    }
+
+    res.render("elections/electionsParticipated", {
+      elections,
+      voteMap,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render("error", {
+      errorMessage: "Error loading your participated elections",
+    });
+  }
+};
+// // GET /elections/participated - Elections the candidate has joined (not necessarily created)
+// exports.getParticipatedElections = async (req, res) => {
 //   try {
-//     const election = await Election.findById(req.params.id)
-//       .populate("candidates")
-//       .populate("createdBy");
+//     const candidateId = req.user.candidate._id;
 
-//     if (!election) {
-//       return res.status(404).render("error", {
-//         errorMessage: "Election not found",
-//         user: req.user,
-//       });
-//     }
+//     const elections = await Election.find({
+//       candidates: candidateId,
+//     })
+//       .sort({ startDate: -1 })
+//       .populate("candidates");
 
-//     let populatedUser = null;
-//     if (req.user) {
-//       populatedUser = await User.findById(req.user._id).populate("candidate");
-//     }
-
-//     const Vote = require("../models/Vote");
-//     const Rejection = require("../models/Rejection");
-
+//     // Generate vote summary per election (needed for AI insights table)
 //     const voteMap = {};
 
-//     election.candidates.forEach((candidate) => {
-//       voteMap[candidate._id.toString()] = {
-//         votes: 0,
-//         voteLost: 0,
-//         isLeading: false,
-//         statusLabel: null,
+//     for (const election of elections) {
+//       const candidateStats = election.votes?.find(
+//         (vote) => vote.candidate.toString() === candidateId.toString()
+//       );
+
+//       voteMap[election._id.toString()] = {
+//         votes: candidateStats?.votes || 0,
+//         voteLost: candidateStats?.voteLost || 0,
 //       };
-//     });
-
-//     // Tally votes
-//     const voteResults = await Vote.aggregate([
-//       { $match: { election: election._id } },
-//       { $group: { _id: "$candidate", votes: { $sum: 1 } } },
-//     ]);
-
-//     voteResults.forEach((result) => {
-//       const cid = result._id.toString();
-//       if (voteMap[cid]) {
-//         voteMap[cid].votes = result.votes;
-//       }
-//     });
-
-//     if (election.candidates.length === 1) {
-//       // Single candidate logic
-//       const candidateId = election.candidates[0]._id.toString();
-//       const rejections = await Rejection.countDocuments({
-//         election: election._id,
-//       });
-
-//       voteMap[candidateId].voteLost = rejections;
-
-//       const votes = voteMap[candidateId].votes;
-
-//       if (votes > rejections) {
-//         voteMap[candidateId].isLeading = true;
-//         voteMap[candidateId].statusLabel = "Leading";
-//       } else if (votes === rejections) {
-//         voteMap[candidateId].statusLabel = "Contested";
-//       } else {
-//         voteMap[candidateId].statusLabel = "Rejected";
-//       }
-//     } else {
-//       // Multi-candidate logic
-//       let maxVotes = 0;
-//       let topCandidates = [];
-
-//       for (const [cid, stats] of Object.entries(voteMap)) {
-//         if (stats.votes > maxVotes) {
-//           maxVotes = stats.votes;
-//           topCandidates = [cid];
-//         } else if (stats.votes === maxVotes) {
-//           topCandidates.push(cid);
-//         }
-//       }
-
-//       if (topCandidates.length === 1) {
-//         const leaderId = topCandidates[0];
-//         voteMap[leaderId].isLeading = true;
-//         voteMap[leaderId].statusLabel = "Leading";
-//       } else {
-//         topCandidates.forEach((cid) => {
-//           voteMap[cid].statusLabel = "Contested";
-//         });
-//       }
 //     }
 
-//     res.render("elections/details", {
-//       election,
-//       user: populatedUser,
+//     res.render("elections/electionsParticipated", {
+//       elections,
 //       voteMap,
 //     });
 //   } catch (error) {
 //     console.error(error);
 //     res.status(500).render("error", {
-//       errorMessage: "Error fetching election",
-//       user: req.user,
+//       errorMessage: "Error loading your participated elections",
 //     });
 //   }
 // };
+
+// // GET /elections/participated - Elections the candidate has joined (not necessarily created)
+// exports.getParticipatedElections = async (req, res) => {
+//   try {
+//     const candidateId = req.user.candidate._id;
+
+//     const elections = await Election.find({
+//       candidates: candidateId,
+//     })
+//       .sort({ startDate: -1 })
+//       .populate("candidates");
+
+//     // Generate vote summary per election (needed for AI insights table)
+//     const voteMap = {};
+
+//     for (const election of elections) {
+//       const candidateStats = election.votes?.find(
+//         (vote) => vote.candidate.toString() === candidateId.toString()
+//       );
+
+//       voteMap[election._id.toString()] = {
+//         votes: candidateStats?.votes || 0,
+//         voteLost: candidateStats?.voteLost || 0,
+//       };
+//     }
+
+//     res.render("elections/electionsParticipated", {
+//       elections,
+//       voteMap,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Error loading your participated elections");
+//   }
+// };
+
+// const Vote = require("../models/Vote");
+// const Election = require("../models/Election");
+
+// GET /elections/participated - Elections the candidate has joined
+exports.getParticipatedElections = async (req, res) => {
+  try {
+    const candidateId = req.user.candidate._id;
+
+    // Find elections where this candidate participated
+    const elections = await Election.find({
+      candidates: candidateId,
+    })
+      .sort({ startDate: -1 })
+      .populate("candidates");
+
+    // Build voteMap by fetching actual vote counts from the Vote collection
+    const voteMap = {};
+
+    for (const election of elections) {
+      // Get votes for this candidate in this election
+      const votesInFavor = await Vote.countDocuments({
+        election: election._id,
+        candidate: candidateId,
+      });
+
+      const votesAgainst = await Vote.countDocuments({
+        election: election._id,
+        candidate: { $ne: candidateId },
+      });
+
+      voteMap[election._id.toString()] = {
+        votes: votesInFavor,
+        voteLost: votesAgainst,
+      };
+    }
+
+    res.render("elections/electionsParticipated", {
+      elections,
+      voteMap,
+    });
+  } catch (error) {
+    console.error("Error in getParticipatedElections:", error);
+    res.status(500).send("Error loading your participated elections");
+  }
+};
+
+// // // GET /elections/:id – View election details
 
 exports.getElection = async (req, res) => {
   try {

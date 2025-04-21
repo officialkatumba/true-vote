@@ -12,9 +12,13 @@ const {
   getMyElections,
   showEditElectionForm,
   updateElection,
+  getParticipatedElections,
 } = require("../controllers/electionController");
 
-const ensureAuthenticated = require("../middlewares/auth"); // Optional for route protection
+const ensureAuthenticated = require("../middlewares/auth");
+
+// ✅ KEEP THIS AT THE TOP BEFORE ANY "/:id" routes
+router.get("/participated", ensureAuthenticated, getParticipatedElections);
 
 // Show form to create election (GET)
 router.get("/create", ensureAuthenticated, showCreateElectionForm);
@@ -22,36 +26,29 @@ router.get("/create", ensureAuthenticated, showCreateElectionForm);
 // Create election (POST)
 router.post("/create", ensureAuthenticated, createElection);
 
-//Viewing the form to edit an election
+// View/edit election form
 router.get("/:id/edit", ensureAuthenticated, showEditElectionForm);
-
-// Handl;ing the editing of an election
 router.post("/:id/edit", ensureAuthenticated, updateElection);
 
-// Viewing a list of All elections by a candidate
+// Elections created by this candidate
 router.get("/my-elections", ensureAuthenticated, getMyElections);
 
-// Get election by ID (GET)
-// router.get("/:id", ensureAuthenticated, getElection); Removed ensureAuthenticated
-// to allow voters view this page as well as other candidates so thath they can login
+// ✅ ⚠️ This must come after "/participated"
 router.get("/:id", getElection);
 
-// Add a candidate to an election (POST)
+// Add candidate
 router.post("/:id/add-candidate", ensureAuthenticated, addCandidateToElection);
 
-// Launch an election (POST)
+// Launch election
 router.post("/:id/launch", ensureAuthenticated, launchElection);
 
-// View results (GET)
+// Results
 router.get("/:id/results", ensureAuthenticated, getElectionResults);
 
-//Viewing of All elections
-
+// All elections list
 router.get("/ongoing", async (req, res) => {
   try {
-    const elections = await Election.find({
-      // electionStatus: "ongoing",
-    }).populate("candidates");
+    const elections = await Election.find().populate("candidates");
     res.render("elections/election-list", { elections });
   } catch (err) {
     res
@@ -60,8 +57,7 @@ router.get("/ongoing", async (req, res) => {
   }
 });
 
-// Show all elections (EJS view)
-
+// Main elections list view
 router.get("/", async (req, res) => {
   try {
     const elections = await Election.find().populate("candidates");
