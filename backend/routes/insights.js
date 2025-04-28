@@ -10,4 +10,10 @@ router.get(
   insightsController.generateReport
 );
 
+router.post(
+  "/insights/:id/generate",
+  ensureAuthenticated,
+  insightsController.generateAllInsightsForCandidate
+);
+
 module.exports = router;

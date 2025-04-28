@@ -18,6 +18,12 @@ const electionSchema = new mongoose.Schema({
     required: false,
   },
 
+  aiSummary: { type: String, default: null },
+
+  insightSections: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "InsightSection" },
+  ],
+
   // Mapping each candidate (by ObjectId or candidateNumber) to votes received
   result: {
     type: Map,

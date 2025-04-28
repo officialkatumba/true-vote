@@ -8,195 +8,296 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
   </head>
-  <body class="bg-light">
+  <body>
     <div class="container my-5">
+      <!-- ✅ Main Title -->
       <h2 class="mb-4 text-center">
-        📊 Insights for Election #<%= election.electionNumber %>
+        Election #<%= election.electionNumber %> — Candidate Insight Report
       </h2>
 
-      <!-- Vote Summary -->
+      <!-- ✅ Quick Facts Header -->
+      <div class="text-center mb-4">
+        <h4 class="fw-bold text-uppercase text-secondary">
+          <i class="fas fa-bolt me-2 text-warning"></i>Quick Facts
+        </h4>
+        <hr class="mx-auto" style="width: 150px; border: 2px solid #ffc107" />
+      </div>
+
+      <!-- ✅ Quick Vote Summary -->
       <div class="row mb-4">
         <div class="col-md-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h6>Total Votes (All Candidates)</h6>
-              <h4><%= stats.totalElectionVotes %></h4>
+          <div class="card text-center shadow-sm">
+            <div class="card-header bg-dark text-white">Total Votes</div>
+            <div class="card-body">
+              <h3><%= stats.totalElectionVotes %></h3>
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h6>Your Votes</h6>
-              <h4 class="text-success"><%= stats.totalVotesForMe %></h4>
-            </div>
+          <div class="card text-center shadow-sm">
+            <div class="card-header bg-success text-white">Your Votes</div>
+            <div class="card-body"><h3><%= stats.totalVotesForMe %></h3></div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h6>Rejections</h6>
-              <h4 class="text-danger"><%= stats.totalRejections %></h4>
+          <div class="card text-center shadow-sm">
+            <div class="card-header bg-danger text-white">
+              Votes Against You
+            </div>
+            <div class="card-body">
+              <h3><%= stats.totalElectionVotes - stats.totalVotesForMe %></h3>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Vote Distribution -->
-      <div class="card mb-5">
-        <div class="card-header bg-dark text-white">
-          Candidate Vote Distribution
-        </div>
-        <div class="card-body">
-          <canvas id="voteDistributionChart"></canvas>
-        </div>
+      <!-- ✅ In-Depth AI Analysis Header -->
+      <div class="text-center mb-4">
+        <h4 class="fw-bold text-uppercase text-secondary">
+          <i class="fas fa-brain me-2 text-primary"></i>In-Depth AI Analysis
+        </h4>
+        <hr class="mx-auto" style="width: 200px; border: 2px solid #0d6efd" />
       </div>
 
-      <!-- Demographic Charts -->
-      <div class="row">
-        <div class="col-md-6 mb-4">
-          <div class="card h-100">
-            <div class="card-header">Age Groups</div>
-            <div class="card-body"><canvas id="ageChart"></canvas></div>
-          </div>
-        </div>
-        <div class="col-md-6 mb-4">
-          <div class="card h-100">
-            <div class="card-header">Education</div>
-            <div class="card-body"><canvas id="educationChart"></canvas></div>
-          </div>
-        </div>
+      <!-- ✅ Section: Demographic Profile -->
+      <h5 class="fw-bold text-dark">
+        <i class="fas fa-users me-2"></i>Demographic Profile
+      </h5>
+      <% if (insightSections && insightSections.find(section => section.title
+      === 'Demographic Profile')) { %>
+      <div class="alert alert-success text-center">
+        ✅ Insight generated.<br /><br />
+        <a
+          href="/api/insights/<%= election._id %>/section/Demographic%20Profile/view"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-eye"></i> View
+        </a>
+        <a
+          href="/api/insights/<%= election._id %>/section/Demographic%20Profile/pdf"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="fas fa-download"></i> Download
+        </a>
       </div>
-
-      <!-- Policy Awareness -->
-      <div class="card mb-5">
-        <div class="card-header">Policy Awareness</div>
-        <div class="card-body">
-          <p>
-            <strong>Familiar:</strong> <%=
-            stats.sentiment.policyKnowledge.familiar %>
-          </p>
-          <p>
-            <strong>Not Familiar:</strong> <%=
-            stats.sentiment.policyKnowledge.unfamiliar %>
-          </p>
-          <% if (stats.sentiment.policyKnowledge.comments.length) { %>
-          <p><strong>What voters know about your policies:</strong></p>
-          <ul>
-            <% stats.sentiment.policyKnowledge.comments.forEach((comment, i) =>
-            { %>
-            <li><%= comment %></li>
-            <% }) %>
-          </ul>
-          <% } %>
-        </div>
+      <% } else if (election.electionStatus === 'completed') { %>
+      <div class="alert alert-warning text-center">
+        ⚠️ Insight not generated yet.<br /><br />
+        <form
+          method="POST"
+          action="/api/insights/<%= election._id %>/section/Demographic%20Profile"
+        >
+          <button class="btn btn-dark btn-sm">
+            <i class="fas fa-magic"></i> Generate Insight
+          </button>
+        </form>
       </div>
-
-      <!-- Feedback & Sentiment -->
-      <div class="row">
-        <div class="col-md-6">
-          <h5>What voters dislike about you</h5>
-          <ul>
-            <% stats.sentiment.dislikes.forEach((d, i) => { %>
-            <li><%= d %></li>
-            <% }) %>
-          </ul>
-        </div>
-        <div class="col-md-6">
-          <h5>Voter expectations from you</h5>
-          <ul>
-            <% stats.sentiment.expectations.forEach((e, i) => { %>
-            <li><%= e %></li>
-            <% }) %>
-          </ul>
-        </div>
+      <% } else { %>
+      <div class="alert alert-secondary text-center">
+        ℹ️ Insight generation available after election completion.
       </div>
+      <% } %>
 
-      <div class="mt-4">
-        <h5>Reasons voters gave for supporting you</h5>
-        <ul>
-          <% stats.sentiment.reasonForVoting.forEach((r, i) => { %>
-          <li><%= r %></li>
-          <% }) %>
-        </ul>
+      <!-- ✅ Section: Educational Journey -->
+      <h5 class="fw-bold text-dark">
+        <i class="fas fa-graduation-cap me-2"></i>Educational Journey
+      </h5>
+      <% if (insightSections && insightSections.find(section => section.title
+      === 'Educational Journey')) { %>
+      <div class="alert alert-success text-center">
+        ✅ Insight generated.<br /><br />
+        <a
+          href="/api/insights/<%= election._id %>/section/Educational%20Journey/view"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-eye"></i> View
+        </a>
+        <a
+          href="/api/insights/<%= election._id %>/section/Educational%20Journey/pdf"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="fas fa-download"></i> Download
+        </a>
       </div>
+      <% } else if (election.electionStatus === 'completed') { %>
+      <div class="alert alert-warning text-center">
+        ⚠️ Insight not generated yet.<br /><br />
+        <form
+          method="POST"
+          action="/api/insights/<%= election._id %>/section/Educational%20Journey"
+        >
+          <button class="btn btn-dark btn-sm">
+            <i class="fas fa-magic"></i> Generate Insight
+          </button>
+        </form>
+      </div>
+      <% } else { %>
+      <div class="alert alert-secondary text-center">
+        ℹ️ Insight generation available after election completion.
+      </div>
+      <% } %>
 
-      <!-- Rejection Reasons -->
-      <% if (stats.rejections.reasons.length) { %>
-      <div class="mt-5">
-        <h4>❌ Rejections Summary</h4>
-        <ul>
-          <% stats.rejections.reasons.forEach((reason, i) => { %>
-          <li><%= reason %></li>
-          <% }) %>
-        </ul>
+      <!-- ✅ Section: Living Context -->
+      <h5 class="fw-bold text-dark">
+        <i class="fas fa-home me-2"></i>Living Context
+      </h5>
+      <% if (insightSections && insightSections.find(section => section.title
+      === 'Living Context')) { %>
+      <div class="alert alert-success text-center">
+        ✅ Insight generated.<br /><br />
+        <a
+          href="/api/insights/<%= election._id %>/section/Living%20Context/view"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-eye"></i> View
+        </a>
+        <a
+          href="/api/insights/<%= election._id %>/section/Living%20Context/pdf"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="fas fa-download"></i> Download
+        </a>
+      </div>
+      <% } else if (election.electionStatus === 'completed') { %>
+      <div class="alert alert-warning text-center">
+        ⚠️ Insight not generated yet.<br /><br />
+        <form
+          method="POST"
+          action="/api/insights/<%= election._id %>/section/Living%20Context"
+        >
+          <button class="btn btn-dark btn-sm">
+            <i class="fas fa-magic"></i> Generate Insight
+          </button>
+        </form>
+      </div>
+      <% } else { %>
+      <div class="alert alert-secondary text-center">
+        ℹ️ Insight generation available after election completion.
+      </div>
+      <% } %>
+
+      <!-- ✅ Section: Economic Factors -->
+      <h5 class="fw-bold text-dark">
+        <i class="fas fa-coins me-2"></i>Economic Factors
+      </h5>
+      <% if (insightSections && insightSections.find(section => section.title
+      === 'Economic Factors')) { %>
+      <div class="alert alert-success text-center">
+        ✅ Insight generated.<br /><br />
+        <a
+          href="/api/insights/<%= election._id %>/section/Economic%20Factors/view"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-eye"></i> View
+        </a>
+        <a
+          href="/api/insights/<%= election._id %>/section/Economic%20Factors/pdf"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="fas fa-download"></i> Download
+        </a>
+      </div>
+      <% } else if (election.electionStatus === 'completed') { %>
+      <div class="alert alert-warning text-center">
+        ⚠️ Insight not generated yet.<br /><br />
+        <form
+          method="POST"
+          action="/api/insights/<%= election._id %>/section/Economic%20Factors"
+        >
+          <button class="btn btn-dark btn-sm">
+            <i class="fas fa-magic"></i> Generate Insight
+          </button>
+        </form>
+      </div>
+      <% } else { %>
+      <div class="alert alert-secondary text-center">
+        ℹ️ Insight generation available after election completion.
+      </div>
+      <% } %>
+
+      <!-- ✅ Section: Policy Awareness & Political Behavior -->
+      <h5 class="fw-bold text-dark">
+        <i class="fas fa-scale-balanced me-2"></i>Policy Awareness & Political
+        Behavior
+      </h5>
+      <% if (insightSections && insightSections.find(section => section.title
+      === 'Policy Awareness & Political Behavior')) { %>
+      <div class="alert alert-success text-center">
+        ✅ Insight generated.<br /><br />
+        <a
+          href="/api/insights/<%= election._id %>/section/Policy%20Awareness%20%26%20Political%20Behavior/view"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-eye"></i> View
+        </a>
+        <a
+          href="/api/insights/<%= election._id %>/section/Policy%20Awareness%20%26%20Political%20Behavior/pdf"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="fas fa-download"></i> Download
+        </a>
+      </div>
+      <% } else if (election.electionStatus === 'completed') { %>
+      <div class="alert alert-warning text-center">
+        ⚠️ Insight not generated yet.<br /><br />
+        <form
+          method="POST"
+          action="/api/insights/<%= election._id %>/section/Policy%20Awareness%20%26%20Political%20Behavior"
+        >
+          <button class="btn btn-dark btn-sm">
+            <i class="fas fa-magic"></i> Generate Insight
+          </button>
+        </form>
+      </div>
+      <% } else { %>
+      <div class="alert alert-secondary text-center">
+        ℹ️ Insight generation available after election completion.
+      </div>
+      <% } %>
+
+      <!-- ✅ Section: Sentiment & Expectations -->
+      <h5 class="fw-bold text-dark">
+        <i class="fas fa-heartbeat me-2"></i>Sentiment & Expectations
+      </h5>
+      <% if (insightSections && insightSections.find(section => section.title
+      === 'Sentiment & Expectations')) { %>
+      <div class="alert alert-success text-center">
+        ✅ Insight generated.<br /><br />
+        <a
+          href="/api/insights/<%= election._id %>/section/Sentiment%20%26%20Expectations/view"
+          class="btn btn-outline-success btn-sm"
+        >
+          <i class="fas fa-eye"></i> View
+        </a>
+        <a
+          href="/api/insights/<%= election._id %>/section/Sentiment%20%26%20Expectations/pdf"
+          class="btn btn-outline-primary btn-sm"
+        >
+          <i class="fas fa-download"></i> Download
+        </a>
+      </div>
+      <% } else if (election.electionStatus === 'completed') { %>
+      <div class="alert alert-warning text-center">
+        ⚠️ Insight not generated yet.<br /><br />
+        <form
+          method="POST"
+          action="/api/insights/<%= election._id %>/section/Sentiment%20%26%20Expectations"
+        >
+          <button class="btn btn-dark btn-sm">
+            <i class="fas fa-magic"></i> Generate Insight
+          </button>
+        </form>
+      </div>
+      <% } else { %>
+      <div class="alert alert-secondary text-center">
+        ℹ️ Insight generation available after election completion.
       </div>
       <% } %>
     </div>
-    <script>
-      const voteDistributionData = {
-        labels: JSON.parse(
-          "<%= JSON.stringify(Object.values(voteDistribution).map(v => v.name)) %>"
-        ),
-        datasets: [
-          {
-            label: "Votes",
-            data: JSON.parse(
-              "<%= JSON.stringify(Object.values(voteDistribution).map(v => v.votes)) %>"
-            ),
-            backgroundColor: JSON.parse(
-              '<%= JSON.stringify(Object.values(voteDistribution).map(v => v.isSelf ? "rgba(40, 167, 69, 0.6)" : "rgba(0, 123, 255, 0.6)")) %>'
-            ),
-          },
-        ],
-      };
-      new Chart(document.getElementById("voteDistributionChart"), {
-        type: "bar",
-        data: voteDistributionData,
-        options: { responsive: true, plugins: { legend: { display: false } } },
-      });
-
-      const ageData = {
-        labels: JSON.parse(
-          "<%= JSON.stringify(Object.keys(stats.demographics.ageGroups)) %>"
-        ),
-        datasets: [
-          {
-            label: "Voters",
-            data: JSON.parse(
-              "<%= JSON.stringify(Object.values(stats.demographics.ageGroups)) %>"
-            ),
-            backgroundColor: "rgba(54, 162, 235, 0.7)",
-          },
-        ],
-      };
-      new Chart(document.getElementById("ageChart"), {
-        type: "bar",
-        data: ageData,
-        options: { responsive: true },
-      });
-
-      const educationData = {
-        labels: JSON.parse(
-          "<%= JSON.stringify(Object.keys(stats.demographics.education)) %>"
-        ),
-        datasets: [
-          {
-            label: "Education Level",
-            data: JSON.parse(
-              "<%= JSON.stringify(Object.values(stats.demographics.education)) %>"
-            ),
-            backgroundColor: "rgba(255, 193, 7, 0.7)",
-          },
-        ],
-      };
-      new Chart(document.getElementById("educationChart"), {
-        type: "bar",
-        data: educationData,
-        options: { responsive: true },
-      });
-    </script>
   </body>
 </html>
