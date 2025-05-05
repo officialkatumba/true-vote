@@ -69,4 +69,4 @@ frontend/public/pdfs/
 .cache/
 
 #Key file
-backend/key.json
+backend/key.jsonbackend/key.json
