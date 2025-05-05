@@ -67,3 +67,6 @@ frontend/public/pdfs/
 
 # Cache directories
 .cache/
+
+#Key file
+backend/key.json
