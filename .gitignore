@@ -1,5 +1,7 @@
-# Node modules
+# Dependency directories
 node_modules/
+frontend/node_modules/
+backend/node_modules/
 
 # Build outputs
 dist/
@@ -7,39 +9,61 @@ build/
 .next/
 out/
 
-# Logs
+# Log files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Environment variables
 .env
+.env.local
 .env.*.local
 
-# OS generated files
+# Operating system files
 .DS_Store
 Thumbs.db
 
-# IDEs
+# IDE specific files
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Optional: log files or error dumps
-*.log
+# Testing and coverage
+coverage/
+*.lcov
+
+# TypeScript build info
 *.tsbuildinfo
 
-# Coverage (if you use testing tools)
-coverage/
-
-# PM2 logs (if you deploy with PM2)
+# Process and log directories
 pids/
 logs/
 
-# Optional: SQLite DB or other local dev files
+# Database files
 *.sqlite
 *.sqlite3
 *.db
 
-# Optional: upload folders, temp files
+# Temporary and upload directories
 uploads/
 tmp/
+
+# PDF files and directories
+backend/pdfs/
+frontend/public/pdfs/
+*.pdf
+
+# Package manager specific
+.pnpm-store/
+.turbo/
+.vite/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Cache directories
+.cache/

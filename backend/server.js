@@ -11,7 +11,7 @@ const User = require("./models/User");
 const connectDB = require("./config/db");
 const cron = require("node-cron");
 const Election = require("./models/Election");
-const insightsRoutes = require("./routes/insights");
+// const insightsRoutes = require("./routes/insights");
 
 dotenv.config();
 
@@ -91,8 +91,10 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/elections", require("./routes/elections"));
 app.use("/api/candidates", require("./routes/candidates"));
 app.use("/api/votes", require("./routes/votes"));
+app.use("/api/insights", require("./routes/insights"));
 
-app.use("/api", insightsRoutes); // <-- important!
+// app.use("/api", insightsRoutes);
+// <-- important!
 // app.use("/elections", require("./routes/elections"));
 
 // 404 handler (ensure it uses EJS)

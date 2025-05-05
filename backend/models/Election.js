@@ -18,11 +18,24 @@ const electionSchema = new mongoose.Schema({
     required: false,
   },
 
-  aiSummary: { type: String, default: null },
-
-  insightSections: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "InsightSection" },
-  ],
+  aiInsights: {
+    type: Map,
+    of: new mongoose.Schema(
+      {
+        "Demographic Profile": { type: String, default: null },
+        "Educational Journey": { type: String, default: null },
+        "Living Context": { type: String, default: null },
+        "Economic Factors": { type: String, default: null },
+        "Policy Awareness & Political Behavior": {
+          type: String,
+          default: null,
+        },
+        "Sentiment & Expectations": { type: String, default: null },
+      },
+      { _id: false }
+    ),
+    default: {},
+  },
 
   // Mapping each candidate (by ObjectId or candidateNumber) to votes received
   result: {
