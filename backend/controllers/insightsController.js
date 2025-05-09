@@ -4,10 +4,11 @@ const Election = require("../models/Election");
 
 // Fixed import (Option 1):
 const { generateInsightPDF } = require("../utils/pdfGenerator");
-const { bucket } = require("../utils/uploadToGCS.js");
+// const { bucket } = require("../utils/uploadToGCS.js");
+const uploadPDFToGCS = require("../utils/uploadToGCS.js");
+
 const fs = require("fs");
 const path = require("path");
-const { pdfGenerator } = require("../utils/pdfGenerator");
 
 // First, make sure you have this at the top of your file (with your actual API key)
 const OpenAI = require("openai");
@@ -18,6 +19,45 @@ const openai = new OpenAI({
 // exports.generateReport = async (req, res) => {
 
 // backend/controllers/insightsController.js
+
+// exports.generateReport = async (req, res) => {
+//   try {
+//     const { id: electionId } = req.params;
+//     const { _id: candidateId } = req.user.candidate;
+
+//     // Get election data
+//     const election = await Election.findById(electionId);
+//     if (!election) return res.status(404).send("Election not found");
+
+//     // Verify candidate participation
+//     const isParticipant = election.candidates.some((c) =>
+//       c.equals(candidateId)
+//     );
+//     if (!isParticipant) return res.status(403).send("Access denied");
+
+//     // Get basic vote counts
+//     const [myVotes, allVotes] = await Promise.all([
+//       Vote.countDocuments({ election: electionId, candidate: candidateId }),
+//       Vote.countDocuments({ election: electionId }),
+//     ]);
+
+//     // Prepare quick stats
+//     const stats = {
+//       totalVotesForMe: myVotes,
+//       totalElectionVotes: allVotes,
+//     };
+
+//     // Render the report template with necessary values
+//     res.render("insights/report", {
+//       election,
+//       stats,
+//       currentCandidateId: candidateId.toString(),
+//     });
+//   } catch (error) {
+//     console.error("Error generating report:", error);
+//     res.status(500).send("Failed to generate report.");
+//   }
+// };
 
 exports.generateReport = async (req, res) => {
   try {
@@ -46,9 +86,15 @@ exports.generateReport = async (req, res) => {
       totalElectionVotes: allVotes,
     };
 
+    // Convert aiInsights Map to plain object for EJS
+    const aiInsights = election.aiInsights.get(candidateId.toString());
+
     // Render the report template with necessary values
     res.render("insights/report", {
-      election,
+      election: {
+        ...election.toObject(),
+        aiInsights: election.aiInsights, // Keep as Map for .get() in template
+      },
       stats,
       currentCandidateId: candidateId.toString(),
     });
@@ -59,123 +105,6 @@ exports.generateReport = async (req, res) => {
 };
 
 // //Export Demographic Analisis
-
-exports.generateDemographicInsight = async (req, res) => {
-  try {
-    const { id: electionId } = req.params;
-    const candidateId = req.user.candidate._id.toString(); // Ensure it's a string for map keys
-
-    // Fetch and validate election
-    const election = await Election.findById(electionId);
-    if (!election) return res.status(404).send("Election not found");
-
-    const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-    if (!isCandidate) return res.status(403).send("Access denied");
-
-    // Fetch votes and rejections
-    const votes = await Vote.find({
-      election: electionId,
-      candidate: candidateId,
-    });
-    let rejections = [];
-
-    try {
-      rejections = await Rejection.find({ election: electionId });
-    } catch (err) {
-      console.warn(
-        "No rejections found or failed to fetch rejections:",
-        err.message
-      );
-    }
-
-    // Define relevant demographic fields
-    const demographicFields = ["age", "gender", "maritalStatus"];
-
-    // Extract fields from votes
-    const extractedVotes = votes.map((vote) =>
-      demographicFields.reduce((acc, field) => {
-        acc[field] = vote[field] ?? null;
-        return acc;
-      }, {})
-    );
-
-    // Extract fields from rejections
-    const extractedRejections = rejections.map((rej) =>
-      demographicFields.reduce((acc, field) => {
-        acc[field] = rej[field] ?? null;
-        return acc;
-      }, {})
-    );
-
-    // Compose OpenAI prompt
-    const prompt = `You are a professional election analyst. Analyze the demographic profile of voters and non-voters (rejections) based on the following data.
-
-Voter Records:
-${JSON.stringify(extractedVotes, null, 2)}
-
-Rejection Records:
-${JSON.stringify(extractedRejections, null, 2)}
-
-Focus on identifying patterns or differences across age, gender, and marital status. Your report should be approximately 250–500 words and written in a professional, objective tone.`;
-
-    // Call OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
-
-    const aiContent = completion.choices[0].message.content.trim();
-
-    // Save insight into the election.aiInsights[candidateId]["Demographic Profile"]
-    if (!election.aiInsights.has(candidateId)) {
-      election.aiInsights.set(candidateId, {});
-    }
-
-    const candidateInsights = election.aiInsights.get(candidateId);
-    candidateInsights["Demographic Profile"] = aiContent;
-    election.aiInsights.set(candidateId, candidateInsights);
-
-    await election.save();
-
-    // 💾 PDF Generation
-    const fileName = `demographic_${electionId}_${candidateId}.pdf`;
-    const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-    const storagePath = `allinsights/${fileName}`;
-
-    await generateInsightPDF({
-      title: "Demographic Profile",
-      content: aiContent,
-      filePath: localPath,
-    });
-
-    // ⬆️ Upload to GCS
-    await bucket.upload(localPath, {
-      destination: storagePath,
-      gzip: true,
-      metadata: {
-        cacheControl: "public, max-age=31536000",
-      },
-    });
-
-    // 🧹 Clean up local file
-    fs.unlink(localPath, (err) => {
-      if (err) console.warn("Failed to delete local PDF:", err);
-    });
-
-    // ✅ Final redirect after save
-    res.redirect(`/api/insights/${electionId}/report`);
-  } catch (err) {
-    console.error("Error generating insight:", err);
-
-    if (err.response) {
-      console.error("API Error:", err.response.status, err.response.data);
-    }
-
-    res.redirect(`/api/insights/${req.params.id}/report`);
-  }
-};
 
 exports.generateEducationalInsight = async (req, res) => {
   try {
@@ -494,7 +423,7 @@ Write a 250–500 word narrative giving insight into economic conditions and wha
     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
     const storagePath = `allinsights/${fileName}`;
 
-    await pdfGenerator.generateInsightPDF({
+    await generateInsightPDF({
       title: "Economic Factors",
       content: aiContent,
       filePath: localPath,
@@ -740,5 +669,400 @@ Craft a 250–500 word strategic insight to help the candidate improve messaging
   } catch (err) {
     console.error("Error generating sentiment insight:", err);
     res.redirect(`/api/insights/${req.params.id}/report`);
+  }
+};
+
+//////////////////////////////////////////////
+
+// exports.generateDemographicInsight = async (req, res) => {
+//   try {
+//     const { id: electionId } = req.params;
+//     const candidateId = req.user.candidate._id.toString();
+
+//     // Fetch election and validate access
+//     const election = await Election.findById(electionId);
+//     if (!election) return res.status(404).send("Election not found");
+
+//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
+//     if (!isCandidate) return res.status(403).send("Access denied");
+
+//     // Fetch votes and rejections
+//     const votes = await Vote.find({
+//       election: electionId,
+//       candidate: candidateId,
+//     });
+//     let rejections = [];
+//     try {
+//       rejections = await Rejection.find({ election: electionId });
+//     } catch (err) {
+//       console.warn(
+//         "No rejections found or failed to fetch rejections:",
+//         err.message
+//       );
+//     }
+
+//     // Extract relevant fields
+//     const demographicFields = ["age", "gender", "maritalStatus"];
+//     const extractedVotes = votes.map((vote) =>
+//       demographicFields.reduce((acc, field) => {
+//         acc[field] = vote[field] ?? null;
+//         return acc;
+//       }, {})
+//     );
+//     const extractedRejections = rejections.map((rej) =>
+//       demographicFields.reduce((acc, field) => {
+//         acc[field] = rej[field] ?? null;
+//         return acc;
+//       }, {})
+//     );
+
+//     // Compose OpenAI prompt
+//     const prompt = `You are a professional election analyst. Analyze the demographic profile of voters and non-voters (rejections) based on the following data.
+
+// Voter Records:
+// ${JSON.stringify(extractedVotes, null, 2)}
+
+// Rejection Records:
+// ${JSON.stringify(extractedRejections, null, 2)}
+
+// Focus on identifying patterns or differences across age, gender, and marital status. Your report should be approximately 250–500 words and written in a professional, objective tone.`;
+
+//     const completion = await openai.chat.completions.create({
+//       model: "gpt-3.5-turbo",
+//       messages: [{ role: "user", content: prompt }],
+//       temperature: 0.7,
+//       max_tokens: 1000,
+//     });
+
+//     const aiContent = completion.choices[0].message.content.trim();
+
+//     // Save insight in aiInsights map
+//     if (!election.aiInsights.has(candidateId)) {
+//       election.aiInsights.set(candidateId, {});
+//     }
+//     const insights = election.aiInsights.get(candidateId);
+//     insights["Demographic Profile"] = aiContent;
+//     election.aiInsights.set(candidateId, insights);
+//     await election.save();
+
+//     // Generate title and file name
+//     const fileName = `demographic_${electionId}_${candidateId}.pdf`;
+//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+//     const storagePath = `allinsights/${fileName}`;
+
+//     // 🧾 Generate PDF without candidate name
+//     await generateInsightPDF({
+//       sectionTitle: "Demographic Profile",
+//       content: aiContent,
+//       filePath: localPath,
+//       electionDetails: {
+//         type: election.type,
+//         electionNumber: election.electionNumber,
+//         startDate: election.endDate,
+//       },
+//     });
+
+//     // Upload to GCS
+//     await bucket.upload(localPath, {
+//       destination: storagePath,
+//       gzip: true,
+//       metadata: {
+//         cacheControl: "public, max-age=31536000",
+//       },
+//     });
+
+//     fs.unlink(localPath, (err) => {
+//       if (err) console.warn("Failed to delete local PDF:", err);
+//     });
+
+//     res.redirect(`/api/insights/${electionId}/report`);
+//   } catch (err) {
+//     console.error("Error generating insight:", err);
+//     res.redirect(`/api/insights/${req.params.id}/report`);
+//   }
+// };
+
+// const path = require("path");
+// const fs = require("fs");
+// const { generateInsightPDF } = require("../utils/pdfGenerator"); // adjust path
+// const { Storage } = require("@google-cloud/storage");
+// const bucket = new Storage().bucket("truevote-insight");
+
+// exports.generateDemographicInsight = async (req, res) => {
+//   try {
+//     const { id: electionId } = req.params;
+//     const candidateId = req.user.candidate._id.toString();
+
+//     // Fetch election and validate access
+//     const election = await Election.findById(electionId);
+//     if (!election) return res.status(404).send("Election not found");
+
+//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
+//     if (!isCandidate) return res.status(403).send("Access denied");
+
+//     // Fetch votes and rejections
+//     const votes = await Vote.find({
+//       election: electionId,
+//       candidate: candidateId,
+//     });
+//     let rejections = [];
+//     try {
+//       rejections = await Rejection.find({ election: electionId });
+//     } catch (err) {
+//       console.warn(
+//         "No rejections found or failed to fetch rejections:",
+//         err.message
+//       );
+//     }
+
+//     // Extract relevant fields
+//     const demographicFields = ["age", "gender", "maritalStatus"];
+//     const extractedVotes = votes.map((vote) =>
+//       demographicFields.reduce((acc, field) => {
+//         acc[field] = vote[field] ?? null;
+//         return acc;
+//       }, {})
+//     );
+//     const extractedRejections = rejections.map((rej) =>
+//       demographicFields.reduce((acc, field) => {
+//         acc[field] = rej[field] ?? null;
+//         return acc;
+//       }, {})
+//     );
+
+//     // Compose OpenAI prompt
+//     const prompt = `You are a professional election analyst. Analyze the demographic profile of voters and non-voters (rejections) based on the following data.
+
+// Voter Records:
+// ${JSON.stringify(extractedVotes, null, 2)}
+
+// Rejection Records:
+// ${JSON.stringify(extractedRejections, null, 2)}
+
+// Focus on identifying patterns or differences across age, gender, and marital status. Your report should be approximately 250–500 words and written in a professional, objective tone.`;
+
+//     const completion = await openai.chat.completions.create({
+//       model: "gpt-3.5-turbo",
+//       messages: [{ role: "user", content: prompt }],
+//       temperature: 0.7,
+//       max_tokens: 1000,
+//     });
+
+//     const aiContent = completion.choices[0].message.content.trim();
+
+//     // Ensure map exists
+//     if (!election.aiInsights.has(candidateId)) {
+//       election.aiInsights.set(candidateId, {});
+//     }
+
+//     const candidateInsights = election.aiInsights.get(candidateId);
+//     candidateInsights["Demographic Profile"] = {
+//       content: aiContent,
+//       pdfUploaded: false,
+//     };
+
+//     election.aiInsights.set(candidateId, candidateInsights);
+//     await election.save();
+
+//     // Generate and upload PDF
+//     const fileName = `demographic_${electionId}_${candidateId}.pdf`;
+//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+//     const storagePath = `allinsights/${fileName}`;
+
+//     await generateInsightPDF({
+//       sectionTitle: "Demographic Profile",
+//       content: aiContent,
+//       filePath: localPath,
+//       electionDetails: {
+//         type: election.type,
+//         electionNumber: election.electionNumber,
+//         startDate: election.endDate,
+//       },
+//     });
+
+//     await bucket.upload(localPath, {
+//       destination: storagePath,
+//       gzip: true,
+//       metadata: {
+//         cacheControl: "public, max-age=31536000",
+//       },
+//     });
+
+//     // Mark as uploaded
+//     const updatedCandidateInsights = election.aiInsights.get(candidateId);
+//     updatedCandidateInsights["Demographic Profile"].pdfUploaded = true;
+//     election.aiInsights.set(candidateId, updatedCandidateInsights);
+//     await election.save();
+
+//     fs.unlink(localPath, (err) => {
+//       if (err) console.warn("Failed to delete local PDF:", err);
+//     });
+
+//     res.redirect(`/api/insights/${electionId}/report`);
+//   } catch (err) {
+//     console.error("Error generating insight:", err);
+//     res.redirect(`/api/insights/${req.params.id}/report`);
+//   }
+// };
+
+const { Storage } = require("@google-cloud/storage");
+// const path = require("path");
+// const fs = require("fs");
+// const { Election, Vote, Rejection } = require("../models");
+// const { generateInsightPDF } = require("../utils/pdfGenerator");
+// const openai = require("../config/openai");
+
+// Initialize Google Cloud Storage with explicit credentials
+const storage = new Storage({
+  keyFilename: path.join(__dirname, "../key.json"),
+  projectId: "truevote-458711",
+});
+const bucket = storage.bucket("truevote-insight");
+
+exports.generateDemographicInsight = async (req, res) => {
+  try {
+    const { id: electionId } = req.params;
+    const candidateId = req.user.candidate._id.toString();
+
+    // 1. Fetch and validate election
+    const election = await Election.findById(electionId);
+    if (!election) return res.status(404).send("Election not found");
+
+    const isCandidate = election.candidates.some((c) => c.equals(candidateId));
+    if (!isCandidate) return res.status(403).send("Access denied");
+
+    // 2. Fetch votes and rejections
+    const votes = await Vote.find({
+      election: electionId,
+      candidate: candidateId,
+    });
+
+    let rejections = [];
+    try {
+      rejections = await Rejection.find({ election: electionId });
+    } catch (err) {
+      console.warn("No rejections found or failed to fetch:", err.message);
+    }
+
+    // 3. Prepare demographic data
+    const demographicFields = ["age", "gender", "maritalStatus"];
+    const extractedVotes = votes.map((vote) =>
+      demographicFields.reduce((acc, field) => {
+        acc[field] = vote[field] ?? null;
+        return acc;
+      }, {})
+    );
+
+    const extractedRejections = rejections.map((rej) =>
+      demographicFields.reduce((acc, field) => {
+        acc[field] = rej[field] ?? null;
+        return acc;
+      }, {})
+    );
+
+    // 4. Generate AI analysis
+    const prompt = `You are a professional election analyst. Analyze the demographic profile of voters and non-voters (rejections) based on the following data.
+
+Voter Records:
+${JSON.stringify(extractedVotes, null, 2)}
+
+Rejection Records:
+${JSON.stringify(extractedRejections, null, 2)}
+
+Focus on identifying patterns or differences across age, gender, and marital status. Your report should be approximately 250-500 words and written in a professional, objective tone.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const aiContent = completion.choices[0].message.content.trim();
+
+    // 5. Store insights in election document
+    if (!election.aiInsights.has(candidateId)) {
+      election.aiInsights.set(candidateId, {});
+    }
+
+    const candidateInsights = election.aiInsights.get(candidateId);
+    candidateInsights["Demographic Profile"] = {
+      content: aiContent,
+      pdfUploaded: false,
+    };
+    await election.save();
+
+    // 6. Generate and upload PDF
+    const fileName = `demographic_${electionId}_${candidateId}.pdf`;
+    const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+    const storagePath = `allinsights/${fileName}`;
+
+    // Ensure pdfs directory exists
+    if (!fs.existsSync(path.dirname(localPath))) {
+      fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    }
+
+    try {
+      // Generate PDF locally
+      await generateInsightPDF({
+        sectionTitle: "Demographic Profile",
+        content: aiContent,
+        filePath: localPath,
+        electionDetails: {
+          type: election.type,
+          electionNumber: election.electionNumber,
+          startDate: election.endDate,
+        },
+      });
+
+      // Verify bucket access
+      const [bucketExists] = await bucket.exists();
+      if (!bucketExists) {
+        throw new Error("Bucket does not exist or no access permissions");
+      }
+
+      // Upload to GCS
+      await bucket.upload(localPath, {
+        destination: storagePath,
+        gzip: true,
+        metadata: {
+          cacheControl: "public, max-age=31536000",
+        },
+      });
+
+      // Update status
+      const updatedCandidateInsights = election.aiInsights.get(candidateId);
+      updatedCandidateInsights["Demographic Profile"].pdfUploaded = true;
+      election.aiInsights.set(candidateId, updatedCandidateInsights);
+      await election.save();
+
+      console.log(`PDF successfully uploaded to ${storagePath}`);
+    } catch (uploadError) {
+      console.error("PDF processing failed:", {
+        error: uploadError.message,
+        stack: uploadError.stack,
+      });
+
+      // Mark as not uploaded but continue
+      const updatedCandidateInsights = election.aiInsights.get(candidateId);
+      updatedCandidateInsights["Demographic Profile"].pdfUploaded = false;
+      election.aiInsights.set(candidateId, updatedCandidateInsights);
+      await election.save();
+    }
+
+    // Clean up local file
+    if (fs.existsSync(localPath)) {
+      fs.unlink(localPath, (err) => {
+        if (err) console.warn("Failed to delete local PDF:", err);
+      });
+    }
+
+    res.redirect(`/api/insights/${electionId}/report`);
+  } catch (err) {
+    console.error("Error in generateDemographicInsight:", {
+      message: err.message,
+      stack: err.stack,
+    });
+    res.status(500).redirect(`/api/insights/${req.params.id}/report`);
   }
 };

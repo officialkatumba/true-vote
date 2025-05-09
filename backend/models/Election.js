@@ -37,6 +37,40 @@ const electionSchema = new mongoose.Schema({
     default: {},
   },
 
+  aiInsights: {
+    type: Map,
+    of: new mongoose.Schema(
+      {
+        "Demographic Profile": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Educational Journey": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Living Context": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Economic Factors": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Policy Awareness & Political Behavior": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Sentiment & Expectations": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+      },
+      { _id: false }
+    ),
+    default: {},
+  },
+
   // Mapping each candidate (by ObjectId or candidateNumber) to votes received
   result: {
     type: Map,

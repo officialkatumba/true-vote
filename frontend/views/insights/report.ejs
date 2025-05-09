@@ -29,25 +29,16 @@
         font-weight: 600;
         letter-spacing: 0.5px;
       }
-      .section-header {
-        position: relative;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-      }
-      .section-header:after {
-        content: "";
+      .pdf-badge {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 50px;
-        height: 3px;
-        background: linear-gradient(90deg, #0d6efd, #00b4db);
+        top: 10px;
+        right: 10px;
+        font-size: 0.7rem;
       }
     </style>
   </head>
   <body>
     <div class="container my-5">
-      <!-- ✅ Enhanced Header -->
       <div
         class="p-4 mb-4 rounded-3"
         style="background: linear-gradient(135deg, #2c3e50, #4ca1af)"
@@ -64,128 +55,34 @@
 
       <% const insights = election.aiInsights?.get(currentCandidateId); %>
 
-      <!-- ✅ Quick Facts Header with animated icon -->
-      <div class="text-center mb-4">
-        <h4 class="fw-bold text-uppercase" style="color: #6c757d">
-          <i
-            class="fas fa-bolt me-2 animate__animated animate__pulse animate__infinite"
-            style="color: #ffc107"
-          ></i
-          >Quick Facts
-        </h4>
-        <hr
-          class="mx-auto"
-          style="width: 150px; border: 2px solid #ffc107; opacity: 0.7"
-        />
-      </div>
-
-      <!-- ✅ Quick Vote Summary -->
-      <div class="row mb-5 g-4">
-        <div class="col-md-4">
-          <div class="card text-center shadow-sm h-100 hover-effect">
-            <div class="card-header bg-dark text-white py-3">
-              <i class="fas fa-vote-yea me-2"></i>Total Votes
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center">
-              <h1 class="display-4 fw-bold" style="color: #343a40">
-                <%= stats.totalElectionVotes %>
-              </h1>
-              <p class="text-muted mb-0">across all candidates</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card text-center shadow-sm h-100 hover-effect">
-            <div class="card-header bg-success text-white py-3">
-              <i class="fas fa-thumbs-up me-2"></i>Your Votes
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center">
-              <h1 class="display-4 fw-bold" style="color: #28a745">
-                <%= stats.totalVotesForMe %>
-              </h1>
-              <div class="mt-2">
-                <span class="badge rounded-pill bg-success">
-                  <%= (stats.totalVotesForMe / stats.totalElectionVotes *
-                  100).toFixed(1) %>% of total
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card text-center shadow-sm h-100 hover-effect">
-            <div class="card-header bg-danger text-white py-3">
-              <i class="fas fa-thumbs-down me-2"></i>Votes Against You
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center">
-              <h1 class="display-4 fw-bold" style="color: #dc3545">
-                <%= stats.totalElectionVotes - stats.totalVotesForMe %>
-              </h1>
-              <div class="mt-2">
-                <span class="badge rounded-pill bg-danger">
-                  <%= ((stats.totalElectionVotes - stats.totalVotesForMe) /
-                  stats.totalElectionVotes * 100).toFixed(1) %>% of total
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ✅ In-Depth AI Analysis Header -->
-      <div class="text-center mb-4 mt-5 pt-4">
-        <h4 class="fw-bold text-uppercase position-relative d-inline-block">
-          <span
-            class="px-3"
-            style="
-              background: linear-gradient(90deg, #0d6efd, #00b4db);
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              position: relative;
-              z-index: 1;
-            "
-          >
-            <i class="fas fa-brain me-2"></i>In-Depth AI Analysis
-          </span>
-          <span
-            class="position-absolute bottom-0 start-50 translate-middle-x"
-            style="
-              width: 200px;
-              height: 4px;
-              background: linear-gradient(90deg, #0d6efd, #00b4db);
-              border-radius: 2px;
-            "
-          ></span>
-        </h4>
-      </div>
-
-      <!-- ✅ Section: Demographic Profile -->
+      <!-- Example: Demographic Profile -->
       <div class="card shadow-lg mb-4 border-0">
-        <div class="card-header bg-primary text-white py-3">
+        <div class="card-header bg-primary text-white py-3 position-relative">
           <h5 class="mb-0">
             <i class="fas fa-users me-2"></i>Demographic Profile
           </h5>
+          <% if (insights && insights["Demographic Profile"]?.pdfUploaded) { %>
+          <span class="pdf-badge badge bg-light text-dark">
+            <i class="fas fa-file-pdf me-1"></i>PDF Ready
+          </span>
+          <% } %>
         </div>
         <div class="card-body">
-          <% if (insights && insights['Demographic Profile']) { %>
+          <% if (insights && insights["Demographic Profile"]?.content) { %>
           <div class="alert alert-success text-center">
-            <div class="mb-3">
-              <i class="fas fa-check-circle fa-3x text-success"></i>
-              <h5 class="mt-2">Insight Generated</h5>
-            </div>
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mt-2">Insight Generated</h5>
             <a
               href="/api/insights/<%= election._id %>/section/Demographic%20Profile/pdf"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary btn-sm mt-2"
             >
               <i class="fas fa-download me-1"></i> Download PDF Report
             </a>
           </div>
           <% } else if (election.electionStatus === 'completed') { %>
           <div class="alert alert-warning text-center">
-            <div class="mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-              <h5 class="mt-2">Insight Not Generated Yet</h5>
-            </div>
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+            <h5 class="mt-2">Insight Not Generated Yet</h5>
             <form
               method="POST"
               action="/api/insights/<%= election._id %>/generate-demographic"
@@ -197,49 +94,45 @@
           </div>
           <% } else { %>
           <div class="alert alert-secondary text-center">
-            <div class="mb-3">
-              <i class="fas fa-info-circle fa-3x text-secondary"></i>
-              <h5 class="mt-2">Insight Generation Available</h5>
-            </div>
+            <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+            <h5 class="mt-2">Insight Generation Available</h5>
             <p>After election completion</p>
           </div>
           <% } %>
         </div>
       </div>
 
-      <!-- ✅ Section: Educational Journey -->
+      <!-- Educational Journey Section -->
       <div class="card shadow-lg mb-4 border-0">
         <div
-          class="card-header"
-          style="
-            background: linear-gradient(90deg, #8e44ad, #9b59b6);
-            color: white;
-          "
+          class="card-header text-white py-3 position-relative"
+          style="background: linear-gradient(90deg, #8e44ad, #9b59b6)"
         >
           <h5 class="mb-0">
             <i class="fas fa-graduation-cap me-2"></i>Educational Journey
           </h5>
+          <% if (insights && insights["Educational Journey"]?.pdfUploaded) { %>
+          <span class="pdf-badge badge bg-light text-dark">
+            <i class="fas fa-file-pdf me-1"></i>PDF Ready
+          </span>
+          <% } %>
         </div>
         <div class="card-body">
-          <% if (insights && insights['Educational Journey']) { %>
+          <% if (insights && insights["Educational Journey"]?.content) { %>
           <div class="alert alert-success text-center">
-            <div class="mb-3">
-              <i class="fas fa-check-circle fa-3x text-success"></i>
-              <h5 class="mt-2">Insight Generated</h5>
-            </div>
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mt-2">Insight Generated</h5>
             <a
               href="/api/insights/<%= election._id %>/section/Educational%20Journey/pdf"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary btn-sm mt-2"
             >
               <i class="fas fa-download me-1"></i> Download PDF Report
             </a>
           </div>
           <% } else if (election.electionStatus === 'completed') { %>
           <div class="alert alert-warning text-center">
-            <div class="mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-              <h5 class="mt-2">Insight Not Generated Yet</h5>
-            </div>
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+            <h5 class="mt-2">Insight Not Generated Yet</h5>
             <form
               method="POST"
               action="/api/insights/<%= election._id %>/generate-education"
@@ -251,47 +144,43 @@
           </div>
           <% } else { %>
           <div class="alert alert-secondary text-center">
-            <div class="mb-3">
-              <i class="fas fa-info-circle fa-3x text-secondary"></i>
-              <h5 class="mt-2">Insight Generation Available</h5>
-            </div>
+            <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+            <h5 class="mt-2">Insight Generation Available</h5>
             <p>After election completion</p>
           </div>
           <% } %>
         </div>
       </div>
 
-      <!-- ✅ Section: Living Context -->
+      <!-- Living Context Section -->
       <div class="card shadow-lg mb-4 border-0">
         <div
-          class="card-header"
-          style="
-            background: linear-gradient(90deg, #27ae60, #2ecc71);
-            color: white;
-          "
+          class="card-header text-white py-3 position-relative"
+          style="background: linear-gradient(90deg, #27ae60, #2ecc71)"
         >
           <h5 class="mb-0"><i class="fas fa-home me-2"></i>Living Context</h5>
+          <% if (insights && insights["Living Context"]?.pdfUploaded) { %>
+          <span class="pdf-badge badge bg-light text-dark">
+            <i class="fas fa-file-pdf me-1"></i>PDF Ready
+          </span>
+          <% } %>
         </div>
         <div class="card-body">
-          <% if (insights && insights['Living Context']) { %>
+          <% if (insights && insights["Living Context"]?.content) { %>
           <div class="alert alert-success text-center">
-            <div class="mb-3">
-              <i class="fas fa-check-circle fa-3x text-success"></i>
-              <h5 class="mt-2">Insight Generated</h5>
-            </div>
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mt-2">Insight Generated</h5>
             <a
               href="/api/insights/<%= election._id %>/section/Living%20Context/pdf"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary btn-sm mt-2"
             >
               <i class="fas fa-download me-1"></i> Download PDF Report
             </a>
           </div>
           <% } else if (election.electionStatus === 'completed') { %>
           <div class="alert alert-warning text-center">
-            <div class="mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-              <h5 class="mt-2">Insight Not Generated Yet</h5>
-            </div>
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+            <h5 class="mt-2">Insight Not Generated Yet</h5>
             <form
               method="POST"
               action="/api/insights/<%= election._id %>/generate-living"
@@ -303,159 +192,46 @@
           </div>
           <% } else { %>
           <div class="alert alert-secondary text-center">
-            <div class="mb-3">
-              <i class="fas fa-info-circle fa-3x text-secondary"></i>
-              <h5 class="mt-2">Insight Generation Available</h5>
-            </div>
+            <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+            <h5 class="mt-2">Insight Generation Available</h5>
             <p>After election completion</p>
           </div>
           <% } %>
         </div>
       </div>
 
-      <!-- ✅ Section: Economic Factors -->
+      <!-- Sentiment & Expectations Section -->
       <div class="card shadow-lg mb-4 border-0">
         <div
-          class="card-header"
-          style="
-            background: linear-gradient(90deg, #e67e22, #e74c3c);
-            color: white;
-          "
-        >
-          <h5 class="mb-0">
-            <i class="fas fa-coins me-2"></i>Economic Factors
-          </h5>
-        </div>
-        <div class="card-body">
-          <% if (insights && insights['Economic Factors']) { %>
-          <div class="alert alert-success text-center">
-            <div class="mb-3">
-              <i class="fas fa-check-circle fa-3x text-success"></i>
-              <h5 class="mt-2">Insight Generated</h5>
-            </div>
-            <a
-              href="/api/insights/<%= election._id %>/section/Economic%20Factors/pdf"
-              class="btn btn-primary btn-sm"
-            >
-              <i class="fas fa-download me-1"></i> Download PDF Report
-            </a>
-          </div>
-          <% } else if (election.electionStatus === 'completed') { %>
-          <div class="alert alert-warning text-center">
-            <div class="mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-              <h5 class="mt-2">Insight Not Generated Yet</h5>
-            </div>
-            <form
-              method="POST"
-              action="/api/insights/<%= election._id %>/generate-economic"
-            >
-              <button class="btn btn-dark btn-sm">
-                <i class="fas fa-magic me-1"></i> Generate Insight
-              </button>
-            </form>
-          </div>
-          <% } else { %>
-          <div class="alert alert-secondary text-center">
-            <div class="mb-3">
-              <i class="fas fa-info-circle fa-3x text-secondary"></i>
-              <h5 class="mt-2">Insight Generation Available</h5>
-            </div>
-            <p>After election completion</p>
-          </div>
-          <% } %>
-        </div>
-      </div>
-
-      <!-- ✅ Section: Policy Awareness & Political Behavior -->
-      <div class="card shadow-lg mb-4 border-0">
-        <div
-          class="card-header"
-          style="
-            background: linear-gradient(90deg, #3498db, #2980b9);
-            color: white;
-          "
-        >
-          <h5 class="mb-0">
-            <i class="fas fa-scale-balanced me-2"></i>Policy Awareness &
-            Political Behavior
-          </h5>
-        </div>
-        <div class="card-body">
-          <% if (insights && insights['Policy Awareness & Political Behavior'])
-          { %>
-          <div class="alert alert-success text-center">
-            <div class="mb-3">
-              <i class="fas fa-check-circle fa-3x text-success"></i>
-              <h5 class="mt-2">Insight Generated</h5>
-            </div>
-            <a
-              href="/api/insights/<%= election._id %>/section/Policy%20Awareness%20%26%20Political%20Behavior/pdf"
-              class="btn btn-primary btn-sm"
-            >
-              <i class="fas fa-download me-1"></i> Download PDF Report
-            </a>
-          </div>
-          <% } else if (election.electionStatus === 'completed') { %>
-          <div class="alert alert-warning text-center">
-            <div class="mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-              <h5 class="mt-2">Insight Not Generated Yet</h5>
-            </div>
-            <form
-              method="POST"
-              action="/api/insights/<%= election._id %>/generate-policy"
-            >
-              <button class="btn btn-dark btn-sm">
-                <i class="fas fa-magic me-1"></i> Generate Insight
-              </button>
-            </form>
-          </div>
-          <% } else { %>
-          <div class="alert alert-secondary text-center">
-            <div class="mb-3">
-              <i class="fas fa-info-circle fa-3x text-secondary"></i>
-              <h5 class="mt-2">Insight Generation Available</h5>
-            </div>
-            <p>After election completion</p>
-          </div>
-          <% } %>
-        </div>
-      </div>
-
-      <!-- ✅ Section: Sentiment & Expectations -->
-      <div class="card shadow-lg mb-4 border-0">
-        <div
-          class="card-header"
-          style="
-            background: linear-gradient(90deg, #e84393, #fd79a8);
-            color: white;
-          "
+          class="card-header text-white py-3 position-relative"
+          style="background: linear-gradient(90deg, #e84393, #fd79a8)"
         >
           <h5 class="mb-0">
             <i class="fas fa-heartbeat me-2"></i>Sentiment & Expectations
           </h5>
+          <% if (insights && insights["Sentiment & Expectations"]?.pdfUploaded)
+          { %>
+          <span class="pdf-badge badge bg-light text-dark">
+            <i class="fas fa-file-pdf me-1"></i>PDF Ready
+          </span>
+          <% } %>
         </div>
         <div class="card-body">
-          <% if (insights && insights['Sentiment & Expectations']) { %>
+          <% if (insights && insights["Sentiment & Expectations"]?.content) { %>
           <div class="alert alert-success text-center">
-            <div class="mb-3">
-              <i class="fas fa-check-circle fa-3x text-success"></i>
-              <h5 class="mt-2">Insight Generated</h5>
-            </div>
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mt-2">Insight Generated</h5>
             <a
               href="/api/insights/<%= election._id %>/section/Sentiment%20%26%20Expectations/pdf"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary btn-sm mt-2"
             >
               <i class="fas fa-download me-1"></i> Download PDF Report
             </a>
           </div>
           <% } else if (election.electionStatus === 'completed') { %>
           <div class="alert alert-warning text-center">
-            <div class="mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-              <h5 class="mt-2">Insight Not Generated Yet</h5>
-            </div>
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+            <h5 class="mt-2">Insight Not Generated Yet</h5>
             <form
               method="POST"
               action="/api/insights/<%= election._id %>/generate-sentiment"
@@ -467,17 +243,125 @@
           </div>
           <% } else { %>
           <div class="alert alert-secondary text-center">
-            <div class="mb-3">
-              <i class="fas fa-info-circle fa-3x text-secondary"></i>
-              <h5 class="mt-2">Insight Generation Available</h5>
-            </div>
+            <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+            <h5 class="mt-2">Insight Generation Available</h5>
             <p>After election completion</p>
           </div>
           <% } %>
         </div>
       </div>
-    </div>
 
+      <!-- Economic Factors Section -->
+      <div class="card shadow-lg mb-4 border-0">
+        <div
+          class="card-header text-white py-3 position-relative"
+          style="background: linear-gradient(90deg, #e67e22, #e74c3c)"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-coins me-2"></i>Economic Factors
+          </h5>
+          <% if (insights && insights["Economic Factors"]?.pdfUploaded) { %>
+          <span class="pdf-badge badge bg-light text-dark">
+            <i class="fas fa-file-pdf me-1"></i>PDF Ready
+          </span>
+          <% } %>
+        </div>
+        <div class="card-body">
+          <% if (insights && insights["Economic Factors"]?.content) { %>
+          <div class="alert alert-success text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mt-2">Insight Generated</h5>
+            <a
+              href="/api/insights/<%= election._id %>/section/Economic%20Factors/pdf"
+              class="btn btn-primary btn-sm mt-2"
+            >
+              <i class="fas fa-download me-1"></i> Download PDF Report
+            </a>
+          </div>
+          <% } else if (election.electionStatus === 'completed') { %>
+          <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+            <h5 class="mt-2">Insight Not Generated Yet</h5>
+            <form
+              method="POST"
+              action="/api/insights/<%= election._id %>/generate-economic"
+            >
+              <button class="btn btn-dark btn-sm">
+                <i class="fas fa-magic me-1"></i> Generate Insight
+              </button>
+            </form>
+          </div>
+          <% } else { %>
+          <div class="alert alert-secondary text-center">
+            <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+            <h5 class="mt-2">Insight Generation Available</h5>
+            <p>After election completion</p>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Policy Awareness & Political Behavior Section -->
+      <div class="card shadow-lg mb-4 border-0">
+        <div
+          class="card-header text-white py-3 position-relative"
+          style="background: linear-gradient(90deg, #3498db, #2980b9)"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-scale-balanced me-2"></i>Policy Awareness &amp;
+            Political Behavior
+          </h5>
+          <% if (insights && insights["Policy Awareness & Political Behavior"]
+          && insights["Policy Awareness & Political Behavior"].pdfUploaded) { %>
+          <span class="pdf-badge badge bg-light text-dark">
+            <i class="fas fa-file-pdf me-1"></i>PDF Ready
+          </span>
+          <% } %>
+        </div>
+        <div class="card-body">
+          <% if (insights && insights["Policy Awareness & Political Behavior"]
+          && insights["Policy Awareness & Political Behavior"].content) { %>
+          <div class="alert alert-success text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mt-2">Insight Generated</h5>
+            <a
+              href="/api/insights/<%= election._id %>/section/Policy%20Awareness%20%26%20Political%20Behavior/pdf"
+              class="btn btn-primary btn-sm mt-2"
+            >
+              <i class="fas fa-download me-1"></i> Download PDF Report
+            </a>
+          </div>
+          <% } else if (election.electionStatus === 'completed') { %>
+          <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+            <h5 class="mt-2">Insight Not Generated Yet</h5>
+            <form
+              method="POST"
+              action="/api/insights/<%= election._id %>/generate-policy"
+            >
+              <button class="btn btn-dark btn-sm">
+                <i class="fas fa-magic me-1"></i> Generate Insight
+              </button>
+            </form>
+          </div>
+          <% } else { %>
+          <div class="alert alert-secondary text-center">
+            <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+            <h5 class="mt-2">Insight Generation Available</h5>
+            <p>After election completion</p>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Repeat the above card block for each section with its respective title and route -->
+      <!-- Just change "Demographic Profile" and `/generate-demographic` appropriately -->
+      <!-- Example: Educational Journey -->
+      <!-- Example: Living Context -->
+      <!-- Example: Economic Factors -->
+      <!-- Example: Policy Awareness & Political Behavior -->
+      <!-- Example: Sentiment & Expectations -->
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
