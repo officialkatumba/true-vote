@@ -3,6 +3,8 @@ const router = express.Router();
 const insightsController = require("../controllers/insightsController");
 const ensureAuthenticated = require("../middlewares/auth");
 
+const { viewInsightPdf } = require("../controllers/insightsController");
+
 const {
   generateDemographicInsight,
 } = require("../controllers/insightsController");
@@ -50,6 +52,8 @@ router.post(
 );
 
 router.post("/:id/generate-policy", ensureAuthenticated, generatePolicyInsight);
+
+router.get("/view/:filename", viewInsightPdf);
 
 router.post(
   "/:id/generate-sentiment",

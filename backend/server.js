@@ -93,6 +93,8 @@ app.use("/api/candidates", require("./routes/candidates"));
 app.use("/api/votes", require("./routes/votes"));
 app.use("/api/insights", require("./routes/insights"));
 
+// app.use("/", pdfRoutes);
+
 // app.use("/api", insightsRoutes);
 // <-- important!
 // app.use("/elections", require("./routes/elections"));
