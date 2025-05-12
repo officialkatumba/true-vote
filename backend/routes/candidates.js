@@ -5,6 +5,8 @@ const {
   registerCandidate,
 } = require("../controllers/candidateController");
 
+const candidateController = require("../controllers/candidateController");
+
 // Middleware to protect routes
 const { ensureAuthenticated } = require("../middlewares/auth");
 
@@ -13,6 +15,9 @@ router.get("/register", showRegisterCandidateForm);
 
 // POST: Handle candidate registration form submission
 router.post("/register", registerCandidate);
+
+router.get("/edit", candidateController.showEditCandidateForm);
+router.post("/edit", candidateController.updateCandidate);
 
 // GET: Candidate Dashboard (only accessible if logged in and role is "candidate")
 router.get("/dashboard", (req, res) => {

@@ -93,6 +93,11 @@ app.use("/api/candidates", require("./routes/candidates"));
 app.use("/api/votes", require("./routes/votes"));
 app.use("/api/insights", require("./routes/insights"));
 
+// Non APi route access
+
+// Add this NEW route for non-API access
+app.use("/candidates", require("./routes/candidates"));
+
 // app.use("/", pdfRoutes);
 
 // app.use("/api", insightsRoutes);

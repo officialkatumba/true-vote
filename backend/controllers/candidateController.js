@@ -75,3 +75,39 @@ exports.registerCandidate = async (req, res, next) => {
     });
   }
 };
+
+exports.showEditCandidateForm = async (req, res) => {
+  try {
+    const candidateId = req.user.candidate;
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) return res.status(404).send("Candidate not found");
+
+    res.render("edit-candidate", { candidate });
+  } catch (err) {
+    console.error("Error loading edit form:", err);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.updateCandidate = async (req, res) => {
+  try {
+    const candidateId = req.user.candidate;
+    const { name, bio, party, profileImage, partySymbol } = req.body;
+
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) return res.status(404).send("Candidate not found");
+
+    // Update fields (fallback to existing values if empty)
+    candidate.name = name || candidate.name;
+    candidate.bio = bio || candidate.bio;
+    candidate.party = party || candidate.party;
+    candidate.profileImage = profileImage || candidate.profileImage;
+    candidate.partySymbol = partySymbol || candidate.partySymbol;
+
+    await candidate.save();
+    res.redirect("/candidates/dashboard");
+  } catch (err) {
+    console.error("Error updating candidate:", err);
+    res.status(500).send("Server error");
+  }
+};
