@@ -96,7 +96,12 @@ app.use("/api/insights", require("./routes/insights"));
 // Non APi route access
 
 // Add this NEW route for non-API access
-app.use("/candidates", require("./routes/candidates"));
+// app.use("/candidates", require("./routes/candidates"));
+
+// Non-API Routes (for views)
+app.use("/", require("./routes/dashboard")); // Your dashboard routes
+app.use("/candidates", require("./routes/candidates")); // Candidate views
+app.use("/users", require("./routes/users")); // Add this for user views
 
 // app.use("/", pdfRoutes);
 

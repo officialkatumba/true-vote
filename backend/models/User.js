@@ -10,13 +10,15 @@ const userSchema = new mongoose.Schema({
   },
   candidate: { type: mongoose.Schema.Types.ObjectId, ref: "Candidate" },
   hadLoggedIn: { type: Boolean, default: false },
+
+  // 🔐 Forgot/reset password fields
   resetPasswordToken: String,
   resetPasswordExpires: Date,
 });
 
-// Add passport-local-mongoose plugin
+// 🔑 Passport-Local Mongoose plugin (adds hashing, salting, auth methods)
 userSchema.plugin(passportLocalMongoose, {
-  usernameField: "email", // Use email instead of username
+  usernameField: "email", // Use email as the username
   errorMessages: {
     UserExistsError: "A user with the given email already exists",
   },
