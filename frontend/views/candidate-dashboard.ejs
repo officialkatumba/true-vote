@@ -1,145 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Candidate Dashboard</title>
-    <!-- Bootstrap 5 CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+<%- include('partials/header') %> <%- include('partials/navbar') %>
 
-    <style>
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        background-color: #f8f9fa;
-      }
+<div class="content container py-5">
+  <div class="dashboard-container text-center mx-auto" style="max-width: 800px">
+    <div class="d-flex justify-content-end mb-3">
+      <a href="/api/users/logout" class="btn btn-outline-danger btn-sm">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
 
-      .main-wrapper {
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .content {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-      }
-
-      .dashboard-container {
-        max-width: 800px;
-        width: 100%;
-        padding: 2rem;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .header,
-      .footer {
-        background-color: #343a40;
-        color: white;
-        padding: 1rem 0;
-        text-align: center;
-      }
-
-      .profile-img {
+    <img
+      src="<%= user.candidate?.profileImage || 'https://cdn.pixabay.com/photo/2020/07/27/17/40/flag-5443011_960_720.jpg' %>"
+      alt="Profile"
+      class="profile-img"
+      style="
         width: 100px;
         height: 100px;
         object-fit: cover;
         border-radius: 50%;
         border: 2px solid #dee2e6;
         margin-bottom: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="main-wrapper">
-      <%- include('partials/header') %>
+      "
+    />
 
-      <div class="content container">
-        <div class="dashboard-container text-center">
-          <div class="d-flex justify-content-end mb-3">
-            <a href="/api/users/logout" class="btn btn-outline-danger btn-sm">
-              <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-          </div>
+    <h3 class="mb-0">Welcome, <%= user.candidate?.name || user.email %></h3>
+    <p class="text-muted mb-0">
+      Candidate No: <%= user.candidate?.candidateNumber || 'Not Availabe' %>
+    </p>
+    <p class="text-muted mb-4">
+      Candidate Email: <%= user.email || 'No Email' %>
+    </p>
 
-          <img
-            src="<%= user.candidate?.profileImage || 'https://cdn.pixabay.com/photo/2020/07/27/17/40/flag-5443011_960_720.jpg' %>"
-            alt="Profile"
-            class="profile-img"
-          />
-          <h3 class="mb-0">
-            Welcome, <%= user.candidate?.name || user.email %>
-          </h3>
-          <p class="text-muted mb-0">
-            Candidate No: <%= user.candidate?.candidateNumber || 'Pending' %>
-          </p>
-          <p class="text-muted mb-4">
-            Candidate Email: <%= user.email || 'No Email' %>
-          </p>
-
-          <div class="row text-center mb-4">
-            <div class="col-md-4 mb-3">
-              <div class="border p-3 rounded bg-light">
-                <h6 class="text-muted">Elections Joined</h6>
-                <h4>3</h4>
-                <!-- Replace with dynamic value -->
-              </div>
-            </div>
-            <div class="col-md-4 mb-3">
-              <div class="border p-3 rounded bg-light">
-                <h6 class="text-muted">Upcoming</h6>
-                <h4>1</h4>
-                <!-- Replace with dynamic value -->
-              </div>
-            </div>
-            <div class="col-md-4 mb-3">
-              <div class="border p-3 rounded bg-light">
-                <h6 class="text-muted">Votes Received</h6>
-                <h4>1,245</h4>
-                <!-- Replace with dynamic value -->
-              </div>
-            </div>
-          </div>
-
-          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-            <a href="/api/elections/my-elections" class="btn btn-primary">
-              <i class="fas fa-list"></i> View My Elections
-            </a>
-            <a href="/api/elections/participated" class="btn btn-info">
-              <i class="fas fa-handshake"></i> Election Summaries
-            </a>
-            <a href="/api/elections/create" class="btn btn-success"
-              >Call New Election</a
-            >
-            <!-- <a href="/profile/edit" class="btn btn-outline-primary"
-              >Edit Profile</a
-            > -->
-
-            <!-- Change to: -->
-            <a href="/api/candidates/edit" class="btn btn-outline-primary">
-              Edit Profile
-            </a>
-          </div>
+    <div class="row text-center mb-4">
+      <div class="col-md-4 mb-3">
+        <div class="border p-3 rounded bg-light">
+          <h6 class="text-muted">Elections Joined</h6>
+          <h4>3</h4>
+          <!-- Replace with dynamic value -->
         </div>
       </div>
-
-      <%- include('partials/footer') %>
+      <div class="col-md-4 mb-3">
+        <div class="border p-3 rounded bg-light">
+          <h6 class="text-muted">Upcoming</h6>
+          <h4>1</h4>
+          <!-- Replace with dynamic value -->
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="border p-3 rounded bg-light">
+          <h6 class="text-muted">Votes Received</h6>
+          <h4>1,245</h4>
+          <!-- Replace with dynamic value -->
+        </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a href="/api/elections/my-elections" class="btn btn-primary">
+        <i class="fas fa-list"></i> View My Elections
+      </a>
+      <a href="/api/elections/participated" class="btn btn-info">
+        <i class="fas fa-handshake"></i> Election Summaries
+      </a>
+      <a href="/api/elections/create" class="btn btn-success">
+        Call New Election
+      </a>
+      <a href="/api/candidates/edit" class="btn btn-outline-primary">
+        Edit Profile
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
