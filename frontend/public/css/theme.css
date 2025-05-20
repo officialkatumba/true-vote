@@ -183,3 +183,259 @@ body {
   right: 10px;
   font-size: 0.7rem;
 }
+
+/* navbar heder combinesd */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+footer {
+  flex-shrink: 0;
+  background-color: #343a40;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  position: relative;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+}
+
+.dashboard-content {
+  flex: 1;
+}
+
+/* Majestic Portrait Profile Image */
+.profile-img-large {
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 5px solid #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin: 0 auto;
+  display: block;
+}
+
+/* Candidate Details */
+.candidate-details {
+  margin-top: 2rem;
+}
+
+.candidate-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.detail-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+}
+
+.detail-value {
+  color: #212529;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.dashboard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 220px;
+  margin-top: 3rem;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+}
+
+.btn-action i {
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+.btn-action:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Hover Color Changes */
+.btn-action.btn-primary:hover {
+  background-color: #0056b3;
+  color: #fff;
+}
+
+.btn-action.btn-info:hover {
+  background-color: #0a66a3;
+  color: #fff;
+}
+
+.btn-action.btn-success:hover {
+  background-color: #218838;
+  color: #fff;
+}
+
+.btn-action.btn-outline-primary:hover {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+/* Logout Button */
+.btn-logout {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-logout:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .btn-action {
+    justify-content: center;
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 576px) {
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .detail-label {
+    min-width: auto;
+  }
+
+  .candidate-name {
+    font-size: 1.8rem;
+  }
+
+  .profile-img-large {
+    max-width: 100%;
+  }
+}
+
+/* Fonts */
+.welcome-heading {
+  font-family: "Poppins", sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-top: 1rem;
+}
+
+.detail-label,
+.detail-value {
+  font-family: "Open Sans", sans-serif;
+}
+
+.fancy-detail {
+  background: linear-gradient(to right, #f0f4ff, #e6ecff);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 1.5rem;
+}
+
+.icon-highlight {
+  color: #4a69bd;
+  font-size: 1.5rem;
+}
+
+.highlight-value {
+  font-size: 1.3rem;
+  color: #1e272e;
+  font-weight: 600;
+}

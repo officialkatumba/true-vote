@@ -18,6 +18,11 @@ const electionSchema = new mongoose.Schema({
     required: false,
   },
 
+  electionContext: {
+    type: String,
+    default: "",
+  },
+
   aiInsights: {
     type: Map,
     of: new mongoose.Schema(
