@@ -44,6 +44,10 @@ exports.generateReport = async (req, res) => {
     );
     if (!isParticipant) return res.status(403).send("Access denied");
 
+    // Fetch current candidate info
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) return res.status(404).send("Candidate not found");
+
     // Get basic vote counts
     const [myVotes, allVotes] = await Promise.all([
       Vote.countDocuments({ election: electionId, candidate: candidateId }),
@@ -63,9 +67,10 @@ exports.generateReport = async (req, res) => {
     res.render("insights/report", {
       election: {
         ...election.toObject(),
-        aiInsights: election.aiInsights, // Keep as Map for .get() in template
+        aiInsights: election.aiInsights, // Still using full map
       },
       stats,
+      candidate, // pass candidate object to EJS
       currentCandidateId: candidateId.toString(),
     });
   } catch (error) {
@@ -73,6 +78,51 @@ exports.generateReport = async (req, res) => {
     res.status(500).send("Failed to generate report.");
   }
 };
+
+// exports.generateReport = async (req, res) => {
+//   try {
+//     const { id: electionId } = req.params;
+//     const { _id: candidateId } = req.user.candidate;
+
+//     // Get election data
+//     const election = await Election.findById(electionId);
+//     if (!election) return res.status(404).send("Election not found");
+
+//     // Verify candidate participation
+//     const isParticipant = election.candidates.some((c) =>
+//       c.equals(candidateId)
+//     );
+//     if (!isParticipant) return res.status(403).send("Access denied");
+
+//     // Get basic vote counts
+//     const [myVotes, allVotes] = await Promise.all([
+//       Vote.countDocuments({ election: electionId, candidate: candidateId }),
+//       Vote.countDocuments({ election: electionId }),
+//     ]);
+
+//     // Prepare quick stats
+//     const stats = {
+//       totalVotesForMe: myVotes,
+//       totalElectionVotes: allVotes,
+//     };
+
+//     // Convert aiInsights Map to plain object for EJS
+//     const aiInsights = election.aiInsights.get(candidateId.toString());
+
+//     // Render the report template with necessary values
+//     res.render("insights/report", {
+//       election: {
+//         ...election.toObject(),
+//         aiInsights: election.aiInsights, // Keep as Map for .get() in template
+//       },
+//       stats,
+//       currentCandidateId: candidateId.toString(),
+//     });
+//   } catch (error) {
+//     console.error("Error generating report:", error);
+//     res.status(500).send("Failed to generate report.");
+//   }
+// };
 
 //////////////////////////////////////////////
 
@@ -425,6 +475,13 @@ exports.generateEducationalInsight = async (req, res) => {
     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
     if (!isCandidate) return res.status(403).send("Access denied");
 
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
+
     // 2. Fetch votes and rejections
     const votes = await Vote.find({
       election: electionId,
@@ -458,7 +515,7 @@ exports.generateEducationalInsight = async (req, res) => {
     );
 
     // 4. Generate AI analysis
-    const candidate = await Candidate.findById(candidateId); // Ensure valid candidate fetch
+    // const candidate = await Candidate.findById(candidateId); // Ensure valid candidate fetch
     const electionContextText = election.electionContext || "";
 
     //     const prompt = `
@@ -623,6 +680,13 @@ exports.generateLivingInsight = async (req, res) => {
 
     const candidate = await Candidate.findById(candidateId);
     const electionContextText = election.electionContext || "";
+
+    // const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
 
     const votes = await Vote.find({
       election: electionId,
@@ -815,6 +879,14 @@ exports.generateEconomicInsight = async (req, res) => {
     if (!isCandidate) return res.status(403).send("Access denied");
 
     const candidate = await Candidate.findById(candidateId);
+
+    // const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
+
     const votes = await Vote.find({
       election: electionId,
       candidate: candidateId,
@@ -976,6 +1048,13 @@ exports.generatePolicyInsight = async (req, res) => {
     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
     if (!isCandidate) return res.status(403).send("Access denied");
 
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
+
     const votes = await Vote.find({
       election: electionId,
       candidate: candidateId,
@@ -1008,7 +1087,7 @@ exports.generatePolicyInsight = async (req, res) => {
       }, {})
     );
 
-    const candidate = req.user.candidate;
+    // const candidate = req.user.candidate;
     const electionContextText =
       election.context ?? "No campaign context provided.";
 
@@ -1140,6 +1219,13 @@ exports.generateSentimentInsight = async (req, res) => {
     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
     if (!isCandidate) return res.status(403).send("Access denied");
 
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
+
     const votes = await Vote.find({
       election: electionId,
       candidate: candidateId,
@@ -1170,7 +1256,7 @@ exports.generateSentimentInsight = async (req, res) => {
       }, {})
     );
 
-    const candidate = await Candidate.findById(candidateId); // ✅ Safely fetch candidate
+    // const candidate = await Candidate.findById(candidateId); // ✅ Safely fetch candidate
     const electionContextText = election.electionContext || "";
 
     // const candidate = req.user.candidate;
