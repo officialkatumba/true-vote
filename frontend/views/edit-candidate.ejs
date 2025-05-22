@@ -17,6 +17,34 @@
         />
       </div>
 
+      <!-- ✅ Email Address Field -->
+      <!-- <div class="mb-3">
+        <label for="email" class="form-label">Email Address *</label>
+        <input
+          type="email"
+          name="email"
+          id="email"
+          value="<%= candidate.email %>"
+          class="form-control"
+          required
+          placeholder="e.g. example@email.com"
+        />
+      </div> -->
+
+      <!-- ✅ Mobile Number Field -->
+      <div class="mb-3">
+        <label for="mobile" class="form-label">Mobile Number *</label>
+        <input
+          type="tel"
+          name="mobile"
+          id="mobile"
+          value="<%= candidate.mobile %>"
+          class="form-control"
+          required
+          placeholder="e.g. +260971234567"
+        />
+      </div>
+
       <div class="mb-3">
         <label for="bio" class="form-label">Short Bio *</label>
         <textarea name="bio" id="bio" rows="3" class="form-control" required>

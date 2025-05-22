@@ -1,66 +1,79 @@
 const passport = require("passport");
-const User = require("../models/User"); // Add this line at the top
-const Candidate = require("../models/Candidate"); // Also add Candidate if needed
-
 const crypto = require("crypto");
-const sendEmail = require("../utils/sendEmail"); // You’ll create this next
 const nodemailer = require("nodemailer");
+
+const User = require("../models/User");
+const Candidate = require("../models/Candidate");
 
 // Show login form
 exports.showLoginForm = (req, res) => {
-  res.render("login"); // ✅ Renders views/login.ejs
+  res.render("login", {
+    success: req.flash("success"),
+    error: req.flash("error"),
+  });
 };
 
 // Handle login with role-based redirect
+
 exports.loginUser = (req, res, next) => {
   passport.authenticate("local", async (err, user, info) => {
     if (err) return next(err);
-    if (!user) return res.redirect("/api/users/login");
+
+    if (!user) {
+      req.flash("error", "Invalid email or password");
+      return res.redirect("/api/users/login");
+    }
 
     req.logIn(user, async (err) => {
       if (err) return next(err);
 
       try {
-        // Role-based redirect with data population
         if (user.role === "system_admin") {
+          req.flash("success", "Welcome system admin!");
           return res.redirect("/admin-dashboard");
-        } else if (user.role === "candidate") {
-          // Populate candidate data if available
-          if (user.candidate) {
-            const Candidate = require("../models/Candidate");
-            const populatedUser = await User.findById(user._id).populate(
-              "candidate"
-            );
-            return res.render("candidate-dashboard", {
-              user: populatedUser,
-              candidate: populatedUser.candidate,
-            });
-          }
-          return res.render("candidate-dashboard", { user });
         }
 
-        return res.status(403).send("Access denied: Role not recognized.");
+        if (user.role === "candidate") {
+          const populatedUser = await User.findById(user._id).populate(
+            "candidate"
+          );
+
+          if (!populatedUser || !populatedUser.candidate) {
+            req.flash("error", "Candidate data not found.");
+            return res.redirect("/api/users/login");
+          }
+
+          const name = populatedUser.candidate.name || populatedUser.email;
+          req.flash("success", `Welcome back, ${name}!`);
+          return res.redirect("/candidate-dashboard");
+        }
+
+        req.flash("error", "Access denied: Role not recognized.");
+        return res.redirect("/api/users/login");
       } catch (error) {
-        return next(error);
+        console.error("Login error:", error);
+        req.flash("error", "Unexpected error occurred during login.");
+        return res.redirect("/api/users/login");
       }
     });
   })(req, res, next);
 };
 
 // Logout user
-exports.logoutUser = (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    res.redirect("/api/users/login"); // ✅ or change to /login if your login form is at that route
+exports.logoutUser = (req, res) => {
+  req.logout(() => {
+    req.flash("success", "You have been logged out.");
+    res.redirect("/api/users/login");
   });
 };
 
 // Show change password form
+
 exports.showChangePasswordForm = (req, res) => {
   res.render("change-password", {
     title: "Change Password",
-    error: req.query.error,
-    success: req.query.success,
+    success: req.flash("success"),
+    error: req.flash("error"),
   });
 };
 
@@ -69,36 +82,29 @@ exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    // Validate input
     if (newPassword !== confirmPassword) {
-      return res.redirect(
-        "/api/users/change-password?error=New+passwords+do+not+match"
-      );
+      req.flash("error", "New passwords do not match");
+      return res.redirect("/api/users/change-password");
     }
 
-    // Find the user
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.redirect("/api/users/change-password?error=User+not+found");
+      req.flash("error", "User not found");
+      return res.redirect("/api/users/change-password");
     }
 
-    // Authenticate current password
-    const authenticatedUser = await new Promise((resolve, reject) => {
+    const authenticatedUser = await new Promise((resolve) => {
       user.authenticate(currentPassword, (err, thisModel, passwordError) => {
-        if (err || passwordError || !thisModel) {
-          return resolve(null);
-        }
+        if (err || passwordError || !thisModel) return resolve(null);
         resolve(thisModel);
       });
     });
 
     if (!authenticatedUser) {
-      return res.redirect(
-        "/api/users/change-password?error=Current+password+is+incorrect"
-      );
+      req.flash("error", "Current password is incorrect");
+      return res.redirect("/api/users/change-password");
     }
 
-    // Set new password
     await new Promise((resolve, reject) => {
       user.setPassword(newPassword, (err) => {
         if (err) return reject(err);
@@ -107,19 +113,16 @@ exports.changePassword = async (req, res) => {
     });
 
     await user.save();
-
-    res.redirect(
-      "/api/users/change-password?success=Password+changed+successfully"
-    );
+    req.flash("success", "Password changed successfully");
+    res.redirect("/api/users/change-password");
   } catch (err) {
     console.error("Password change error:", err);
-    res.redirect("/api/users/change-password?error=Error+changing+password");
+    req.flash("error", "Error changing password");
+    res.redirect("/api/users/change-password");
   }
 };
 
-// Reset password logic
-
-// --- Show Forgot Password Form
+// Show forgot password form
 exports.showForgotForm = (req, res) => {
   res.render("forgot-password", {
     title: "Forgot Password",
@@ -128,7 +131,7 @@ exports.showForgotForm = (req, res) => {
   });
 };
 
-// --- Request Password Reset (send reset link)
+// Request password reset
 exports.requestResetPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -144,7 +147,6 @@ exports.requestResetPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // ✅ FIX: use correct route prefix to match Express
     const resetLink = `http://${req.headers.host}/users/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
@@ -161,7 +163,7 @@ exports.requestResetPassword = async (req, res) => {
       to: user.email,
       from: process.env.EMAIL_USER,
       subject: "Reset Your Password",
-      text: `You requested a password reset.\n\nClick the link to reset your password:\n\n${resetLink}\n\nIf you did not request this, you can safely ignore this email.`,
+      text: `You requested a password reset.\n\nClick the link below to reset your password:\n\n${resetLink}\n\nIf you didn't request this, you can ignore the email.`,
     });
 
     return res.redirect(
@@ -175,7 +177,7 @@ exports.requestResetPassword = async (req, res) => {
   }
 };
 
-// --- Show Reset Password Form (GET via token)
+// Show reset password form
 exports.showResetForm = async (req, res) => {
   const { token } = req.params;
 
@@ -190,29 +192,23 @@ exports.showResetForm = async (req, res) => {
     );
   }
 
-  // res.render("reset-password", {
-  //   token,
-  //   error: req.query.error,
-  //   success: req.query.success,
-  // });
-
   res.render("reset-password", {
     token,
+    email: user.email,
     error: req.query.error,
     success: req.query.success,
-    email: user.email, // ✅ add this
   });
 };
 
-// --- Handle New Password Submission (POST)
+// Handle new password submission
+
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { newPassword, confirmPassword } = req.body;
 
   if (newPassword !== confirmPassword) {
-    return res.redirect(
-      `/users/reset-password/${token}?error=Passwords+do+not+match`
-    );
+    req.flash("error", "Passwords do not match");
+    return res.redirect(`/users/reset-password/${token}`);
   }
 
   try {
@@ -222,9 +218,8 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.redirect(
-        "/users/forgot-password?error=Invalid+or+expired+reset+token"
-      );
+      req.flash("error", "Invalid or expired reset token");
+      return res.redirect("/users/forgot-password");
     }
 
     await new Promise((resolve, reject) => {
@@ -238,12 +233,11 @@ exports.resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    // res.redirect("/login?success=Password+reset+successfully");
-    res.redirect("/api/users/login?success=Password+reset+successfully");
+    req.flash("success", "Password reset successfully");
+    res.redirect("/api/users/login");
   } catch (err) {
     console.error("Reset error:", err);
-    res.redirect(
-      `/users/reset-password/${token}?error=An+unexpected+error+occurred`
-    );
+    req.flash("error", "Unexpected error occurred");
+    res.redirect(`/users/reset-password/${token}`);
   }
 };

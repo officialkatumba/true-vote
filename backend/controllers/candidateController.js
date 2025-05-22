@@ -10,11 +10,19 @@ exports.showRegisterCandidateForm = (req, res) => {
 // POST: Handle candidate registration
 exports.registerCandidate = async (req, res, next) => {
   try {
-    const { name, email, password, bio, party, profileImage, partySymbol } =
-      req.body;
+    const {
+      name,
+      email,
+      password,
+      bio,
+      party,
+      profileImage,
+      partySymbol,
+      mobile,
+    } = req.body;
 
     // Basic validation
-    if (!name || !email || !password || !bio) {
+    if (!name || !email || !password || !bio || !mobile) {
       return res.status(400).render("register-candidate", {
         errorMessage: "All required fields must be filled",
       });
@@ -28,6 +36,7 @@ exports.registerCandidate = async (req, res, next) => {
       party: party || "Independent",
       profileImage,
       partySymbol,
+      mobile,
     });
 
     await newCandidate.save();
@@ -59,13 +68,12 @@ exports.registerCandidate = async (req, res, next) => {
         newCandidate.user = user._id;
         await newCandidate.save();
 
-        // Step 4: Auto-login
-        req.login(user, (err) => {
-          if (err) return next(err);
-          user.hadLoggedIn = true;
-          user.save();
-          return res.redirect("/candidates/dashboard");
-        });
+        // Redirect to login page instead of auto-login
+        req.flash(
+          "success",
+          "Registration successful! Please log in to continue."
+        );
+        return res.redirect("/api/users/login");
       }
     );
   } catch (error) {
@@ -92,22 +100,29 @@ exports.showEditCandidateForm = async (req, res) => {
 exports.updateCandidate = async (req, res) => {
   try {
     const candidateId = req.user.candidate;
-    const { name, bio, party, profileImage, partySymbol } = req.body;
+    const { name, bio, party, profileImage, partySymbol, mobile } = req.body;
 
     const candidate = await Candidate.findById(candidateId);
-    if (!candidate) return res.status(404).send("Candidate not found");
+    if (!candidate) {
+      req.flash("error", "Candidate not found");
+      return res.redirect("/candidates/edit");
+    }
 
-    // Update fields (fallback to existing values if empty)
+    // Update fields
     candidate.name = name || candidate.name;
     candidate.bio = bio || candidate.bio;
     candidate.party = party || candidate.party;
     candidate.profileImage = profileImage || candidate.profileImage;
     candidate.partySymbol = partySymbol || candidate.partySymbol;
+    candidate.mobile = mobile || candidate.mobile;
 
     await candidate.save();
-    res.redirect("/candidates/dashboard");
+
+    req.flash("success", "Profile updated successfully!");
+    res.redirect("/candidate-dashboard"); // Changed to match your route
   } catch (err) {
     console.error("Error updating candidate:", err);
-    res.status(500).send("Server error");
+    req.flash("error", "Failed to update profile");
+    res.redirect("/candidates/edit");
   }
 };

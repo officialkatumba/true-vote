@@ -439,3 +439,11 @@ footer {
   color: #1e272e;
   font-weight: 600;
 }
+
+.spinner-border {
+  vertical-align: middle;
+  margin-left: 8px;
+}
+.swal2-popup {
+  font-size: 1.1rem;
+}

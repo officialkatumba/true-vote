@@ -83,12 +83,18 @@ exports.generateDemographicInsight = async (req, res) => {
 
     // 1. Fetch and validate election
     const election = await Election.findById(electionId);
-    if (!election) return res.status(404).send("Election not found");
+    if (!election) {
+      req.flash("error", "Election not found");
+      return res.redirect("/candidate-dashboard");
+    }
 
     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-    if (!isCandidate) return res.status(403).send("Access denied");
+    if (!isCandidate) {
+      req.flash("error", "Access denied");
+      return res.redirect("/candidate-dashboard");
+    }
 
-    // 2. Fetch votes and rejections
+    // 2. Fetch votes and rejections (existing logic unchanged)
     const votes = await Vote.find({
       election: electionId,
       candidate: candidateId,
@@ -101,7 +107,7 @@ exports.generateDemographicInsight = async (req, res) => {
       console.warn("No rejections found or failed to fetch:", err.message);
     }
 
-    // 3. Prepare demographic data
+    // 3. Prepare demographic data (existing logic unchanged)
     const demographicFields = ["age", "gender", "maritalStatus"];
     const extractedVotes = votes.map((vote) =>
       demographicFields.reduce((acc, field) => {
@@ -117,9 +123,8 @@ exports.generateDemographicInsight = async (req, res) => {
       }, {})
     );
 
-    // 4. Generate AI analysis
-
-    const candidate = await Candidate.findById(candidateId); // ✅ Safely fetch candidate
+    // 4. Generate AI analysis (existing logic unchanged)
+    const candidate = await Candidate.findById(candidateId);
     const electionContextText = election.electionContext || "";
 
     const prompt = `
@@ -155,7 +160,7 @@ Write clearly, objectively, and helpfully. The more detailed the better.
 
     const aiContent = completion.choices[0].message.content.trim();
 
-    // 5. Store insights in election document
+    // 5. Store insights in election document (existing logic unchanged)
     if (!election.aiInsights.has(candidateId)) {
       election.aiInsights.set(candidateId, {});
     }
@@ -167,18 +172,16 @@ Write clearly, objectively, and helpfully. The more detailed the better.
     };
     await election.save();
 
-    // 6. Generate and upload PDF
+    // 6. Generate and upload PDF (existing logic unchanged)
     const fileName = `demographic_${electionId}_${candidateId}.pdf`;
     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
     const storagePath = `allinsights/${fileName}`;
 
-    // Ensure pdfs directory exists
     if (!fs.existsSync(path.dirname(localPath))) {
       fs.mkdirSync(path.dirname(localPath), { recursive: true });
     }
 
     try {
-      // Generate PDF locally
       await generateInsightPDF({
         sectionTitle: "Demographic Profile",
         content: aiContent,
@@ -190,13 +193,11 @@ Write clearly, objectively, and helpfully. The more detailed the better.
         },
       });
 
-      // Verify bucket access
       const [bucketExists] = await bucket.exists();
       if (!bucketExists) {
         throw new Error("Bucket does not exist or no access permissions");
       }
 
-      // Upload to GCS
       await bucket.upload(localPath, {
         destination: storagePath,
         gzip: true,
@@ -205,7 +206,6 @@ Write clearly, objectively, and helpfully. The more detailed the better.
         },
       });
 
-      // Update status
       const updatedCandidateInsights = election.aiInsights.get(candidateId);
       updatedCandidateInsights["Demographic Profile"].pdfUploaded = true;
       election.aiInsights.set(candidateId, updatedCandidateInsights);
@@ -218,7 +218,6 @@ Write clearly, objectively, and helpfully. The more detailed the better.
         stack: uploadError.stack,
       });
 
-      // Mark as not uploaded but continue
       const updatedCandidateInsights = election.aiInsights.get(candidateId);
       updatedCandidateInsights["Demographic Profile"].pdfUploaded = false;
       election.aiInsights.set(candidateId, updatedCandidateInsights);
@@ -232,15 +231,185 @@ Write clearly, objectively, and helpfully. The more detailed the better.
       });
     }
 
+    req.flash("success", "Demographic insights generated successfully!");
+    // return res.redirect("/candidate-dashboard");
     res.redirect(`/api/insights/${electionId}/report`);
   } catch (err) {
     console.error("Error in generateDemographicInsight:", {
       message: err.message,
       stack: err.stack,
     });
+    req.flash("error", "Failed to generate demographic insights");
+    // return res.redirect("/candidate-dashboard");
     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
   }
 };
+
+// exports.generateDemographicInsight = async (req, res) => {
+//   try {
+//     const { id: electionId } = req.params;
+//     const candidateId = req.user.candidate._id.toString();
+
+//     // 1. Fetch and validate election
+//     const election = await Election.findById(electionId);
+//     if (!election) return res.status(404).send("Election not found");
+
+//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
+//     if (!isCandidate) return res.status(403).send("Access denied");
+
+//     // 2. Fetch votes and rejections
+//     const votes = await Vote.find({
+//       election: electionId,
+//       candidate: candidateId,
+//     });
+
+//     let rejections = [];
+//     try {
+//       rejections = await Rejection.find({ election: electionId });
+//     } catch (err) {
+//       console.warn("No rejections found or failed to fetch:", err.message);
+//     }
+
+//     // 3. Prepare demographic data
+//     const demographicFields = ["age", "gender", "maritalStatus"];
+//     const extractedVotes = votes.map((vote) =>
+//       demographicFields.reduce((acc, field) => {
+//         acc[field] = vote[field] ?? null;
+//         return acc;
+//       }, {})
+//     );
+
+//     const extractedRejections = rejections.map((rej) =>
+//       demographicFields.reduce((acc, field) => {
+//         acc[field] = rej[field] ?? null;
+//         return acc;
+//       }, {})
+//     );
+
+//     // 4. Generate AI analysis
+
+//     const candidate = await Candidate.findById(candidateId); // ✅ Safely fetch candidate
+//     const electionContextText = election.electionContext || "";
+
+//     const prompt = `
+// You are a professional election analyst with access to both internal voter data and external public sources. Your goal is to generate a deep, strategic report (preferably between 500 and 1000 words) on the **Demographic Profile** of voters and non-voters (rejections).
+
+// You should:
+// - Analyze the internal election data
+// - Interpret the candidate-submitted election context
+// - Include publicly known and web-searchable information about the candidate named **${
+//       candidate.name
+//     }**
+// - Use this to make the report insightful and strategic for campaign purposes
+
+// Election Context Notes (from candidate):
+// ${electionContextText}
+
+// Voter Records:
+// ${JSON.stringify(extractedVotes, null, 2)}
+
+// Rejection Records:
+// ${JSON.stringify(extractedRejections, null, 2)}
+
+// Please identify patterns across age, gender, and marital status, and include public insights if available.
+// Write clearly, objectively, and helpfully. The more detailed the better.
+// `;
+
+//     const completion = await openai.chat.completions.create({
+//       model: "gpt-3.5-turbo",
+//       messages: [{ role: "user", content: prompt }],
+//       temperature: 0.7,
+//       max_tokens: 1000,
+//     });
+
+//     const aiContent = completion.choices[0].message.content.trim();
+
+//     // 5. Store insights in election document
+//     if (!election.aiInsights.has(candidateId)) {
+//       election.aiInsights.set(candidateId, {});
+//     }
+
+//     const candidateInsights = election.aiInsights.get(candidateId);
+//     candidateInsights["Demographic Profile"] = {
+//       content: aiContent,
+//       pdfUploaded: false,
+//     };
+//     await election.save();
+
+//     // 6. Generate and upload PDF
+//     const fileName = `demographic_${electionId}_${candidateId}.pdf`;
+//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+//     const storagePath = `allinsights/${fileName}`;
+
+//     // Ensure pdfs directory exists
+//     if (!fs.existsSync(path.dirname(localPath))) {
+//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
+//     }
+
+//     try {
+//       // Generate PDF locally
+//       await generateInsightPDF({
+//         sectionTitle: "Demographic Profile",
+//         content: aiContent,
+//         filePath: localPath,
+//         electionDetails: {
+//           type: election.type,
+//           electionNumber: election.electionNumber,
+//           startDate: election.endDate,
+//         },
+//       });
+
+//       // Verify bucket access
+//       const [bucketExists] = await bucket.exists();
+//       if (!bucketExists) {
+//         throw new Error("Bucket does not exist or no access permissions");
+//       }
+
+//       // Upload to GCS
+//       await bucket.upload(localPath, {
+//         destination: storagePath,
+//         gzip: true,
+//         metadata: {
+//           cacheControl: "public, max-age=31536000",
+//         },
+//       });
+
+//       // Update status
+//       const updatedCandidateInsights = election.aiInsights.get(candidateId);
+//       updatedCandidateInsights["Demographic Profile"].pdfUploaded = true;
+//       election.aiInsights.set(candidateId, updatedCandidateInsights);
+//       await election.save();
+
+//       console.log(`PDF successfully uploaded to ${storagePath}`);
+//     } catch (uploadError) {
+//       console.error("PDF processing failed:", {
+//         error: uploadError.message,
+//         stack: uploadError.stack,
+//       });
+
+//       // Mark as not uploaded but continue
+//       const updatedCandidateInsights = election.aiInsights.get(candidateId);
+//       updatedCandidateInsights["Demographic Profile"].pdfUploaded = false;
+//       election.aiInsights.set(candidateId, updatedCandidateInsights);
+//       await election.save();
+//     }
+
+//     // Clean up local file
+//     if (fs.existsSync(localPath)) {
+//       fs.unlink(localPath, (err) => {
+//         if (err) console.warn("Failed to delete local PDF:", err);
+//       });
+//     }
+
+//     res.redirect(`/api/insights/${electionId}/report`);
+//   } catch (err) {
+//     console.error("Error in generateDemographicInsight:", {
+//       message: err.message,
+//       stack: err.stack,
+//     });
+//     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
+//   }
+// };
 
 // Genrate eduction insight
 

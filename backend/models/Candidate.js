@@ -4,9 +4,37 @@ const Counter = require("./Counter");
 const candidateSchema = new mongoose.Schema({
   candidateNumber: { type: Number, unique: true }, // Auto-incremented candidate number
   name: { type: String, required: true }, // Candidate's full name
-  email: { type: String, unique: true, required: true }, // Candidate's email address
+  // email: { type: String, unique: true, required: true }, // Candidate's email address
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+  },
+
   mobile: { type: String, required: true }, // Candidate's mobile number
-  mobile: { type: String, required: true }, // Candidate's mobile number
+  membershipStatus: {
+    type: String,
+    enum: ["active", "pending", "expired"],
+    default: "pending",
+  },
+
+  membershipExpiresOn: {
+    type: Date,
+    required: false, // Optional if not all candidates have a membership
+  },
+
+  // 🆕 Tracking fields
+
+  hasCalledAnElection: {
+    type: Boolean,
+    default: false,
+  },
+
+  electionsCalled: { type: Number, default: 0 },
+  electionsJoined: { type: Number, default: 0 },
+
   bio: { type: String, required: true }, // Short bio
   party: { type: String, default: "Independent" }, // Political party
   profileImage: { type: String }, // URL for profile image

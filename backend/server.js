@@ -7,20 +7,18 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const flash = require("connect-flash"); // ✅ NEW
 const User = require("./models/User");
 const connectDB = require("./config/db");
 const cron = require("node-cron");
 const Election = require("./models/Election");
-// const insightsRoutes = require("./routes/insights");
 
 dotenv.config();
-
-// Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// Session middleware (must come before passport.session)
+// Session middleware (must come before passport & flash)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "yourSecret",
@@ -40,11 +38,14 @@ app.use(
   })
 );
 
+// ✅ Flash middleware (must come after session)
+app.use(flash());
+
 // Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Passport configuration
+// Passport config
 passport.use(
   new LocalStrategy({ usernameField: "email" }, User.authenticate())
 );
@@ -59,33 +60,25 @@ app.use(bodyParser.json());
 // Static files (served from /frontend/public)
 app.use(express.static(path.join(__dirname, "../frontend/public")));
 
-// View engine setup (critical for EJS)
+// View engine setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "../frontend/views"));
 
-// Flash messages middleware (optional but recommended for forms)
+// ✅ Set res.locals for flash messages and user
 app.use((req, res, next) => {
-  res.locals.messages = req.session.messages || {};
-  delete req.session.messages;
-  res.locals.user = req.user; // Make user available in all EJS templates
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  res.locals.error = req.flash("error"); // Passport-specific errors
+  res.locals.user = req.user;
   next();
 });
 
-// Routes
-// app.get("/", (req, res) => {
-//   res.render("index", { user: req.user }); // Pass user to index.ejs
-// });
-
-// // Add the registration route (if not already in another file)
-// app.get("/register", (req, res) => {
-//   res.render("register", { user: req.user }); // Pass user to register.ejs
-// });
-
+// Basic routes
 app.get("/", (req, res) => {
   res.render("index", { user: req.user });
 });
 
-// Existing API routes
+// // API routes
 app.use("/", require("./routes/dashboard"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/elections", require("./routes/elections"));
@@ -93,38 +86,23 @@ app.use("/api/candidates", require("./routes/candidates"));
 app.use("/api/votes", require("./routes/votes"));
 app.use("/api/insights", require("./routes/insights"));
 
-// Non APi route access
+// Non-API view routes
+app.use("/candidates", require("./routes/candidates"));
+app.use("/users", require("./routes/users"));
 
-// Add this NEW route for non-API access
-// app.use("/candidates", require("./routes/candidates"));
+// // View Routes (for rendering pages)
+// app.use("/candidates", require("./routes/candidates")); // Handles pages like /candidates/register
+// app.use("/users", require("./routes/users"));
+// app.use("/", require("./routes/dashboard")); // Root-level pages
 
-// Non-API Routes (for views)
-app.use("/", require("./routes/dashboard")); // Your dashboard routes
-app.use("/candidates", require("./routes/candidates")); // Candidate views
-app.use("/users", require("./routes/users")); // Add this for user views
+// // API Routes (for handling backend POST/GET requests)
+// app.use("/api/users", require("./routes/api/users"));
+// app.use("/api/elections", require("./routes/api/elections"));
+// app.use("/api/candidates", require("./routes/api/candidates")); // Handles form submissions like /api/candidates/register
+// app.use("/api/votes", require("./routes/api/votes"));
+// app.use("/api/insights", require("./routes/api/insights"));
 
-// app.use("/", pdfRoutes);
-
-// app.use("/api", insightsRoutes);
-// <-- important!
-// app.use("/elections", require("./routes/elections"));
-
-// 404 handler (ensure it uses EJS)
-// app.use((req, res) => {
-//   res.status(404).render("404", { title: "Page Not Found", user: req.user });
-// });
-
-// Centralized error handler (EJS-compatible)
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).render("error", {
-//     title: "Error",
-//     errorMessage: "Something went wrong",
-//     errorDetail: process.env.NODE_ENV === "development" ? err.message : null,
-//     user: req.user,
-//   });
-// });
-
+// Cron: Auto-complete elections
 cron.schedule("* * * * *", async () => {
   try {
     const now = new Date();

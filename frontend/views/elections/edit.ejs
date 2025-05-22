@@ -1,49 +1,68 @@
 <%- include('../partials/header') %>
 <%- include('../partials/navbar') %>
 
-<div class="container py-5">
-  <div class="card shadow">
-    <div class="card-body">
-      <h3 class="mb-4 text-center">Edit Election</h3>
+<div class="content container py-5">
+  <div
+    class="form-container mx-auto"
+    style="
+      max-width: 500px;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    "
+  >
+    <h3 class="mb-4 text-center">Edit Election</h3>
 
-      <form method="POST" action="/api/elections/<%= election._id %>/edit">
-        <div class="mb-3">
-          <label class="form-label">Type of Election</label>
-          <select name="type" class="form-select" required>
-            <option value="presidential" <%= election.type === "presidential" ? "selected" : "" %>>Presidential</option>
-            <option value="parliamentary" <%= election.type === "parliamentary" ? "selected" : "" %>>Parliamentary</option>
-            <option value="mayoral" <%= election.type === "mayoral" ? "selected" : "" %>>Mayoral</option>
-            <option value="councillor" <%= election.type === "councillor" ? "selected" : "" %>>Councillor</option>
-          </select>
-        </div>
+    <form method="POST" action="/api/elections/<%= election._id %>/edit">
+      <div class="mb-3">
+        <label class="form-label">Type of Election</label>
+        <select name="type" class="form-select" required>
+          <option value="presidential" <%= election.type === "presidential" ? "selected" : "" %>>Presidential</option>
+          <option value="parliamentary" <%= election.type === "parliamentary" ? "selected" : "" %>>Parliamentary</option>
+          <option value="mayoral" <%= election.type === "mayoral" ? "selected" : "" %>>Mayoral</option>
+          <option value="councillor" <%= election.type === "councillor" ? "selected" : "" %>>Councillor</option>
+        </select>
+      </div>
 
-        <div class="mb-3">
-          <label class="form-label">Start Date</label>
-          <input
-            type="datetime-local"
-            name="startDate"
-            class="form-control"
-            value="<%= election.startDate.toISOString().slice(0,16) %>"
-            required
-          />
-        </div>
+      <!-- ✅ Edit Field: Election Context -->
+      <div class="mb-4">
+        <label for="electionContext" class="form-label">
+          Election Context / Notes
+        </label>
+        <textarea
+          name="electionContext"
+          id="electionContext"
+          rows="4"
+          class="form-control"
+          placeholder="Add any relevant background about the election such as registered voters, current MP/councillor, or known issues..."
+        ><%= election?.electionContext || '' %></textarea>
+      </div>
 
-        <div class="mb-3">
-          <label class="form-label">End Date</label>
-          <input
-            type="datetime-local"
-            name="endDate"
-            class="form-control"
-            value="<%= election.endDate.toISOString().slice(0,16) %>"
-            required
-          />
-        </div>
+      <div class="mb-3">
+        <label class="form-label">Start Date</label>
+        <input
+          type="datetime-local"
+          name="startDate"
+          class="form-control"
+          value="<%= election.startDate.toISOString().slice(0,16) %>"
+          required
+        />
+      </div>
 
-        <div class="text-center">
-          <button type="submit" class="btn btn-primary">Update Election</button>
-        </div>
-      </form>
-    </div>
+      <div class="mb-3">
+        <label class="form-label">End Date</label>
+        <input
+          type="datetime-local"
+          name="endDate"
+          class="form-control"
+          value="<%= election.endDate.toISOString().slice(0,16) %>"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Update Election</button>
+    </form>
   </div>
 </div>
 

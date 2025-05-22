@@ -6,7 +6,7 @@
       <!-- Profile Image -->
       <div class="profile-image-container mb-4">
         <img
-          src="<%= user.candidate?.profileImage || 'https://cdn.pixabay.com/photo/2020/07/27/17/40/flag-5443011_960_720.jpg' %>"
+          src="<%= user.candidate && user.candidate.profileImage ? user.candidate.profileImage : 'https://cdn.pixabay.com/photo/2020/07/27/17/40/flag-5443011_960_720.jpg' %>"
           alt="Profile"
           class="profile-img-large rounded-circle"
         />
@@ -14,7 +14,8 @@
 
       <!-- Welcome Message -->
       <h1 class="welcome-heading">
-        Welcome, <%= user.candidate?.name || user.email %>
+        <%= user.candidate && user.candidate.name ? user.candidate.name
+        : user.email %>
       </h1>
 
       <!-- Candidate Info Card -->
@@ -24,23 +25,75 @@
             <i class="fas fa-id-badge icon-highlight me-2"></i> Candidate
             Number:
           </div>
-          <div class="detail-value highlight-value">
-            <%= user.candidate?.candidateNumber || 'Not Available' %>
+          <div class="detail-value ">
+            <%= user.candidate && user.candidate.candidateNumber ?
+            user.candidate.candidateNumber : 'Not Available' %>
           </div>
         </div>
+
         <div class="detail-row">
           <div class="detail-label">
             <i class="fas fa-envelope me-2"></i> Email Address:
           </div>
           <div class="detail-value"><%= user.email || 'No Email' %></div>
         </div>
+
         <div class="detail-row">
           <div class="detail-label">
             <i class="fas fa-phone-alt me-2"></i> Mobile Number:
           </div>
           <div class="detail-value">
-            <%= user.candidate?.mobile || 'Not Provided' %>
+            <%= user.candidate && user.candidate.mobile ? user.candidate.mobile
+            : 'Not Provided' %>
           </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-bullhorn me-2"></i> Elections Called :
+          </div>
+          <div class="detail-value">
+            <div class="detail-value">
+   <%= user.candidate?.electionsCalled || 0 %><br>
+</div>
+
+          </div>
+        </div>
+
+        <div class="detail-row">
+  <div class="detail-label">
+    <i class="fas fa-users me-2"></i> Elections Joined :
+  </div>
+  <div class="detail-value">
+    <%= user.candidate?.electionsJoined || 0 %>
+  </div>
+</div>
+
+
+       
+
+        <div class="detail-row">
+  <div class="detail-label">
+    <i class="fas fa-user-check me-2"></i> Membership Status:
+  </div>
+  <div class="detail-value">
+    <%= user.candidate?.membershipStatus || 'Unknown' %>
+  </div>
+</div>
+
+<div class="detail-row">
+  <div class="detail-label">
+    <i class="fas fa-calendar-alt me-2"></i> Membership Expiry:
+  </div>
+  <div class="detail-value">
+    <% if (user.candidate?.membershipExpiresOn) { %>
+      <%= new Date(user.candidate.membershipExpiresOn).toLocaleDateString() %>
+    <% } else { %>
+      Not set
+    <% } %>
+  </div>
+</div>
+
         </div>
       </div>
 

@@ -16,6 +16,10 @@ router.get("/register", showRegisterCandidateForm);
 // POST: Handle candidate registration form submission
 router.post("/register", registerCandidate);
 
+// // To:
+// router.get("/register-candidate", showRegisterCandidateForm);
+// router.post("/register-candidate", registerCandidate);
+
 router.get("/edit", candidateController.showEditCandidateForm);
 router.post("/edit", candidateController.updateCandidate);
 

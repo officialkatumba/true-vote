@@ -8,11 +8,172 @@ exports.showCreateElectionForm = (req, res) => {
   res.render("elections/create"); // EJS form (to be created)
 };
 
+// // POST /elections/create – Create election and link creator
+
 // POST /elections/create – Create election and link creator
+// exports.createElection = async (req, res) => {
+//   try {
+//     // const { type, startDate, endDate } = req.body;
+
+//     const { type, startDate: rawStartDate, endDate } = req.body;
+//     const startDate = rawStartDate || new Date();
+
+//     const creatorId = req.user.candidate._id; // from ensureAuthenticated
+
+//     // Fetch candidate to check eligibility
+//     const candidate = await Candidate.findById(creatorId);
+
+//     // Block if membership is not active
+//     if (candidate.membershipStatus !== "active") {
+//       return res.status(403).render("error", {
+//         errorMessage:
+//           "Only candidates with an active membership can launch elections.",
+//       });
+//     }
+
+//     // Block if already called an election
+//     if (
+//       candidate.hasCalledAnElection &&
+//       candidate.membershipStatus !== "active"
+//     ) {
+//       return res.status(403).render("error", {
+//         errorMessage: "You have already launched an election.",
+//       });
+//     }
+
+//     // Create the election
+//     const newElection = new Election({
+//       type,
+//       startDate,
+//       endDate,
+//       createdBy: creatorId,
+//       candidates: [creatorId],
+//     });
+
+//     await newElection.save();
+
+//     // Update candidate state
+//     candidate.hasCalledAnElection = true;
+//     await candidate.save();
+
+//     res.redirect(`/api/elections/${newElection._id}`);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).render("error", {
+//       errorMessage: "Failed to create election",
+//     });
+//   }
+// };
+
+// // POST /elections/create – Create election and link creator
+// exports.createElection = async (req, res) => {
+//   try {
+//     const {
+//       type,
+//       startDate: rawStartDate,
+//       endDate,
+//       electionContext,
+//     } = req.body;
+//     const startDate = rawStartDate || new Date();
+
+//     const creatorId = req.user.candidate._id;
+
+//     const candidate = await Candidate.findById(creatorId);
+
+//     // Membership check
+//     if (candidate.membershipStatus !== "active") {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           "Only candidates with an active membership can launch elections.",
+//       });
+//     }
+
+//     // Already called an election check
+//     if (
+//       candidate.hasCalledAnElection &&
+//       candidate.membershipStatus !== "active"
+//     ) {
+//       return res.status(403).json({
+//         success: false,
+//         message: "You have already launched an election.",
+//       });
+//     }
+
+//     // Create and save election
+//     const newElection = new Election({
+//       type,
+//       startDate,
+//       endDate,
+//       createdBy: creatorId,
+//       candidates: [creatorId],
+//       electionContext,
+//     });
+
+//     await newElection.save();
+
+//     // Increment candidate fields and update
+//     candidate.hasCalledAnElection = true;
+//     candidate.numberOfAllElectionsCalled += 1;
+
+//     const currentYear = new Date().getFullYear();
+//     const lastCallYear = candidate.lastElectionCallYear || null;
+
+//     if (lastCallYear !== currentYear) {
+//       candidate.numberOfElectionsCalledThisYear = 1;
+//     } else {
+//       candidate.numberOfElectionsCalledThisYear += 1;
+//     }
+
+//     candidate.lastElectionCallYear = currentYear;
+//     await candidate.save();
+
+//     // Respond with JSON for SweetAlert
+//     res.status(201).json({
+//       success: true,
+//       message: "Election created successfully!",
+//       electionId: newElection._id,
+//       electionType: newElection.type,
+//       startDate: newElection.startDate,
+//       endDate: newElection.endDate,
+//     });
+//   } catch (error) {
+//     console.error("Election creation error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "An error occurred while creating the election.",
+//     });
+//   }
+// };
+
 exports.createElection = async (req, res) => {
   try {
-    const { type, startDate, endDate } = req.body;
-    const creatorId = req.user.candidate._id; // from ensureAuthenticated & Passport
+    const {
+      type,
+      startDate: rawStartDate,
+      endDate,
+      electionContext,
+    } = req.body;
+    const startDate = rawStartDate || new Date();
+
+    const creatorId = req.user.candidate._id;
+    const candidate = await Candidate.findById(creatorId);
+
+    if (candidate.membershipStatus !== "active") {
+      req.flash(
+        "error",
+        "Only candidates with an active membership can launch elections."
+      );
+      return res.redirect("/candidate-dashboard");
+    }
+
+    if (
+      candidate.hasCalledAnElection &&
+      candidate.membershipStatus !== "active"
+    ) {
+      req.flash("error", "You have already launched an election.");
+      return res.redirect("/candidate-dashboard");
+    }
 
     const newElection = new Election({
       type,
@@ -20,48 +181,115 @@ exports.createElection = async (req, res) => {
       endDate,
       createdBy: creatorId,
       candidates: [creatorId],
+      electionContext,
     });
 
     await newElection.save();
 
-    res.redirect(`/api/elections/${newElection._id}`);
+    candidate.hasCalledAnElection = true;
+    candidate.numberOfAllElections += 1;
+    candidate.numberOfElectionsCalledThisYear =
+      (candidate.numberOfElectionsCalledThisYear || 0) + 1;
+
+    await candidate.save();
+
+    req.flash("success", "Election created successfully!");
+    return res.redirect("/candidate-dashboard"); // Always redirect to dashboard
   } catch (error) {
-    console.error(error);
-    res.status(500).render("error", {
-      errorMessage: "Failed to create election",
-    });
+    console.error("Election creation error:", error);
+    req.flash("error", "An error occurred while creating the election.");
+    return res.redirect("/candidate-dashboard");
   }
 };
 
 // Showing the edit form for an election
+
+// exports.showEditElectionForm = async (req, res) => {
+//   try {
+//     const election = await Election.findById(req.params.id);
+
+//     if (!election || election.electionStatus !== "draft") {
+//       return res.status(403).render("error", {
+//         errorMessage: "Only draft elections can be edited",
+//       });
+//     }
+
+//     // Only creator can edit
+//     if (!election.createdBy.equals(req.user.candidate._id)) {
+//       return res.status(403).render("error", {
+//         errorMessage: "You are not authorized to edit this election",
+//       });
+//     }
+
+//     res.render("elections/edit", { election });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).render("error", {
+//       errorMessage: "Error loading election for editing",
+//     });
+//   }
+// };
 
 exports.showEditElectionForm = async (req, res) => {
   try {
     const election = await Election.findById(req.params.id);
 
     if (!election || election.electionStatus !== "draft") {
-      return res.status(403).render("error", {
-        errorMessage: "Only draft elections can be edited",
-      });
+      req.flash("error", "Only draft elections can be edited.");
+      return res.redirect("/candidate-dashboard");
     }
 
     // Only creator can edit
     if (!election.createdBy.equals(req.user.candidate._id)) {
-      return res.status(403).render("error", {
-        errorMessage: "You are not authorized to edit this election",
-      });
+      req.flash("error", "You are not authorized to edit this election.");
+      return res.redirect("/candidate-dashboard");
     }
 
-    res.render("elections/edit", { election });
+    res.render("elections/edit", {
+      election,
+      success: req.flash("success"),
+      error: req.flash("error"),
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).render("error", {
-      errorMessage: "Error loading election for editing",
-    });
+    req.flash("error", "Error loading election for editing.");
+    res.redirect("/candidate-dashboard");
   }
 };
 
 // Handling the form to edit an election
+
+// exports.updateElection = async (req, res) => {
+//   try {
+//     const { type, startDate, endDate } = req.body;
+//     const election = await Election.findById(req.params.id);
+
+//     if (!election || election.electionStatus !== "draft") {
+//       return res.status(403).render("error", {
+//         errorMessage: "Only draft elections can be edited",
+//       });
+//     }
+
+//     // Ensure only the creator can edit
+//     if (!election.createdBy.equals(req.user.candidate._id)) {
+//       return res.status(403).render("error", {
+//         errorMessage: "You are not authorized to edit this election",
+//       });
+//     }
+
+//     election.type = type;
+//     election.startDate = new Date(startDate);
+//     election.endDate = new Date(endDate);
+//     await election.save();
+
+//     res.redirect(`/api/elections/${election._id}`);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).render("error", {
+//       errorMessage: "Error updating election",
+//     });
+//   }
+// };
 
 exports.updateElection = async (req, res) => {
   try {
@@ -69,16 +297,14 @@ exports.updateElection = async (req, res) => {
     const election = await Election.findById(req.params.id);
 
     if (!election || election.electionStatus !== "draft") {
-      return res.status(403).render("error", {
-        errorMessage: "Only draft elections can be edited",
-      });
+      req.flash("error", "Only draft elections can be edited.");
+      return res.redirect("/candidate-dashboard");
     }
 
     // Ensure only the creator can edit
     if (!election.createdBy.equals(req.user.candidate._id)) {
-      return res.status(403).render("error", {
-        errorMessage: "You are not authorized to edit this election",
-      });
+      req.flash("error", "You are not authorized to edit this election.");
+      return res.redirect("/candidate-dashboard");
     }
 
     election.type = type;
@@ -86,12 +312,12 @@ exports.updateElection = async (req, res) => {
     election.endDate = new Date(endDate);
     await election.save();
 
-    res.redirect(`/api/elections/${election._id}`);
+    req.flash("success", "Election updated successfully!");
+    res.redirect("/candidate-dashboard");
   } catch (error) {
     console.error(error);
-    res.status(500).render("error", {
-      errorMessage: "Error updating election",
-    });
+    req.flash("error", "Error updating election.");
+    res.redirect("/candidate-dashboard");
   }
 };
 
