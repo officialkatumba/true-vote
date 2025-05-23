@@ -7,6 +7,10 @@ const {
   submitRejection,
 } = require("../controllers/rejectionController");
 
+const validateRequest = require("../middlewares/validateRequest");
+const { voteValidationSchema } = require("../validators/voteValidationSchema");
+
+const rejectionValidationSchema = require("../validators/rejectionValidationSchema");
 //Display the voting form
 
 router.get("/:electionId/vote/:candidateId", async (req, res) => {
@@ -14,7 +18,7 @@ router.get("/:electionId/vote/:candidateId", async (req, res) => {
   res.render("vote/vote-form", { electionId, candidateId });
 });
 
-router.post("/cast", castVote); // POST /api/votes/cast
+router.post("/cast", validateRequest(voteValidationSchema), castVote); // POST /api/votes/cast
 
 // Fetch Election Results
 router.get("/:id/results", getResults);
@@ -23,7 +27,11 @@ router.get("/:id/results", getResults);
 router.get("/:electionId/reject", getRejectForm);
 
 // Handle submission
-router.post("/:electionId/reject", submitRejection);
+router.post(
+  "/:electionId/reject",
+  validateRequest(rejectionValidationSchema),
+  submitRejection
+);
 
 //Thank you page to display  after success vote
 router.get("/thank-you", (req, res) => {

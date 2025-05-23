@@ -4,7 +4,10 @@ const {
   showRegisterCandidateForm,
   registerCandidate,
 } = require("../controllers/candidateController");
-
+const {
+  candidateValidationSchema,
+} = require("../validators/candidateValidator");
+const validate = require("../middlewares/validateRequest");
 const candidateController = require("../controllers/candidateController");
 
 // Middleware to protect routes
@@ -14,7 +17,11 @@ const { ensureAuthenticated } = require("../middlewares/auth");
 router.get("/register", showRegisterCandidateForm);
 
 // POST: Handle candidate registration form submission
-router.post("/register", registerCandidate);
+router.post(
+  "/register",
+  validate(candidateValidationSchema),
+  registerCandidate
+);
 
 // // To:
 // router.get("/register-candidate", showRegisterCandidateForm);

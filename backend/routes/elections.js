@@ -15,6 +15,9 @@ const {
   getParticipatedElections,
 } = require("../controllers/electionController");
 
+const validate = require("../middlewares/validateRequest");
+const { electionValidationSchema } = require("../validators/electionValidator");
+
 const ensureAuthenticated = require("../middlewares/auth");
 
 // ✅ KEEP THIS AT THE TOP BEFORE ANY "/:id" routes
@@ -24,7 +27,12 @@ router.get("/participated", ensureAuthenticated, getParticipatedElections);
 router.get("/create", ensureAuthenticated, showCreateElectionForm);
 
 // Create election (POST)
-router.post("/create", ensureAuthenticated, createElection);
+router.post(
+  "/create",
+  ensureAuthenticated,
+  validate(electionValidationSchema),
+  createElection
+);
 
 // View/edit election form
 router.get("/:id/edit", ensureAuthenticated, showEditElectionForm);
