@@ -16,24 +16,63 @@ const Election = require("./models/Election");
 dotenv.config();
 connectDB();
 
+const Redis = require("ioredis");
+const RedisStore = require("connect-redis").default; // Correct for v7.1.1
+
 const app = express();
 
 // Session middleware (must come before passport & flash)
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "yourSecret",
+//     resave: false,
+//     saveUninitialized: false,
+//     store: MongoStore.create({
+//       mongoUrl: process.env.MONGO_URI,
+//       ttl: 2 * 60 * 60,
+//     }),
+//     name: "sessionId",
+//     cookie: {
+//       httpOnly: true,
+//       maxAge: 1000 * 60 * 60 * 2,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "strict",
+//     },
+//   })
+// );
+
+// Redis client setup
+
+const redisClient = new Redis({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD,
+  tls: process.env.NODE_ENV === "production" ? {} : undefined,
+});
+
+// Optional: log connection events
+redisClient.on("connect", () => {
+  console.log("✅ Connected to Redis");
+});
+redisClient.on("error", (err) => {
+  console.error("❌ Redis error:", err);
+});
+
+// Trust proxy
+app.set("trust proxy", 1);
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "yourSecret",
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-      ttl: 2 * 60 * 60,
-    }),
-    name: "sessionId",
+    name: process.env.SESSION_COOKIE_NAME || "sid",
     cookie: {
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 2,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 2,
     },
   })
 );
@@ -79,7 +118,6 @@ app.get("/", (req, res) => {
 });
 
 // // API routes
-app.use("/", require("./routes/dashboard"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/elections", require("./routes/elections"));
 app.use("/api/candidates", require("./routes/candidates"));
@@ -87,20 +125,9 @@ app.use("/api/votes", require("./routes/votes"));
 app.use("/api/insights", require("./routes/insights"));
 
 // Non-API view routes
+app.use("/", require("./routes/dashboard"));
 app.use("/candidates", require("./routes/candidates"));
 app.use("/users", require("./routes/users"));
-
-// // View Routes (for rendering pages)
-// app.use("/candidates", require("./routes/candidates")); // Handles pages like /candidates/register
-// app.use("/users", require("./routes/users"));
-// app.use("/", require("./routes/dashboard")); // Root-level pages
-
-// // API Routes (for handling backend POST/GET requests)
-// app.use("/api/users", require("./routes/api/users"));
-// app.use("/api/elections", require("./routes/api/elections"));
-// app.use("/api/candidates", require("./routes/api/candidates")); // Handles form submissions like /api/candidates/register
-// app.use("/api/votes", require("./routes/api/votes"));
-// app.use("/api/insights", require("./routes/api/insights"));
 
 // Cron: Auto-complete elections
 cron.schedule("* * * * *", async () => {
