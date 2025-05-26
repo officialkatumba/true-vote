@@ -113,20 +113,13 @@ exports.showCreateElectionForm = (req, res) => {
 //     await newElection.save();
 
 //     // Increment candidate fields and update
+//     // Update candidate's election status
 //     candidate.hasCalledAnElection = true;
-//     candidate.numberOfAllElectionsCalled += 1;
-
-//     const currentYear = new Date().getFullYear();
-//     const lastCallYear = candidate.lastElectionCallYear || null;
-
-//     if (lastCallYear !== currentYear) {
-//       candidate.numberOfElectionsCalledThisYear = 1;
-//     } else {
-//       candidate.numberOfElectionsCalledThisYear += 1;
-//     }
-
-//     candidate.lastElectionCallYear = currentYear;
+//     candidate.electionsCalled += 1;
 //     await candidate.save();
+
+//     req.flash("success", "Election created successfully!");
+//     return res.redirect("/candidate-dashboard");
 
 //     // Respond with JSON for SweetAlert
 //     res.status(201).json({
@@ -146,6 +139,7 @@ exports.showCreateElectionForm = (req, res) => {
 //   }
 // };
 
+// POST /elections/create – Create election and link creator
 exports.createElection = async (req, res) => {
   try {
     const {
@@ -157,24 +151,24 @@ exports.createElection = async (req, res) => {
     const startDate = rawStartDate || new Date();
 
     const creatorId = req.user.candidate._id;
+
     const candidate = await Candidate.findById(creatorId);
 
-    if (candidate.membershipStatus !== "active") {
-      req.flash(
-        "error",
-        "Only candidates with an active membership can launch elections."
-      );
-      return res.redirect("/candidate-dashboard");
-    }
-
+    // Combined membership and election status check
     if (
-      candidate.hasCalledAnElection &&
-      candidate.membershipStatus !== "active"
+      candidate.membershipStatus !== "active" ||
+      candidate.hasCalledAnElection
     ) {
-      req.flash("error", "You have already launched an election.");
-      return res.redirect("/candidate-dashboard");
+      return res.status(403).json({
+        success: false,
+        message:
+          candidate.membershipStatus !== "active"
+            ? "Only candidates with an active membership can launch elections."
+            : "You cannot launch another election.",
+      });
     }
 
+    // Create and save election
     const newElection = new Election({
       type,
       startDate,
@@ -186,21 +180,146 @@ exports.createElection = async (req, res) => {
 
     await newElection.save();
 
+    // Update candidate's election status
     candidate.hasCalledAnElection = true;
-    candidate.numberOfAllElections += 1;
-    candidate.numberOfElectionsCalledThisYear =
-      (candidate.numberOfElectionsCalledThisYear || 0) + 1;
-
+    candidate.electionsCalled += 1;
     await candidate.save();
 
-    req.flash("success", "Election created successfully!");
-    return res.redirect("/candidate-dashboard"); // Always redirect to dashboard
+    // Choose ONE response method - either JSON for SweetAlert or redirect with flash
+    // Option 1: For API/SweetAlert usage
+    return res.status(201).json({
+      success: true,
+      message: "Election created successfully!",
+      electionId: newElection._id,
+      electionType: newElection.type,
+      startDate: newElection.startDate,
+      endDate: newElection.endDate,
+    });
+
+    // OR Option 2: For traditional form submission with redirect
+    // req.flash("success", "Election created successfully!");
+    // return res.redirect("/candidate-dashboard");
   } catch (error) {
     console.error("Election creation error:", error);
-    req.flash("error", "An error occurred while creating the election.");
-    return res.redirect("/candidate-dashboard");
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while creating the election.",
+    });
   }
 };
+
+// exports.createElection = async (req, res) => {
+//   try {
+//     const {
+//       type,
+//       startDate: rawStartDate,
+//       endDate,
+//       electionContext,
+//     } = req.body;
+//     const startDate = rawStartDate || new Date();
+
+//     const creatorId = req.user.candidate._id;
+//     const candidate = await Candidate.findById(creatorId);
+
+//     if (candidate.membershipStatus !== "active") {
+//       req.flash(
+//         "error",
+//         "Only candidates with an active membership can launch elections."
+//       );
+//       return res.redirect("/candidate-dashboard");
+//     }
+
+//     if (
+//       candidate.hasCalledAnElection &&
+//       candidate.membershipStatus !== "active"
+//     ) {
+//       req.flash("error", "You have already launched an election.");
+//       return res.redirect("/candidate-dashboard");
+//     }
+
+//     const newElection = new Election({
+//       type,
+//       startDate,
+//       endDate,
+//       createdBy: creatorId,
+//       candidates: [creatorId],
+//       electionContext,
+//     });
+
+//     await newElection.save();
+
+//     candidate.hasCalledAnElection = true;
+//     candidate.electionsCalled += 1;
+
+//     await candidate.save();
+
+//     req.flash("success", "Election created successfully!");
+//     return res.redirect("/candidate-dashboard"); // Always redirect to dashboard
+//   } catch (error) {
+//     console.error("Election creation error:", error);
+//     req.flash("error", "An error occurred while creating the election.");
+//     return res.redirect("/candidate-dashboard");
+//   }
+// };
+
+// exports.createElection = async (req, res) => {
+//   try {
+//     const {
+//       type,
+//       startDate: rawStartDate,
+//       endDate,
+//       electionContext,
+//     } = req.body;
+
+//     // Default startDate to current time if not provided
+//     const startDate = rawStartDate ? new Date(rawStartDate) : new Date();
+
+//     const creatorId = req.user?.candidate?._id;
+//     const candidate = await Candidate.findById(creatorId);
+
+//     if (!candidate) {
+//       req.flash("error", "Candidate not found.");
+//       return res.redirect("/candidate-dashboard");
+//     }
+
+//     if (candidate.membershipStatus !== "active") {
+//       req.flash(
+//         "error",
+//         "Only candidates with an active membership can launch elections."
+//       );
+//       return res.redirect("/candidate-dashboard");
+//     }
+
+//     if (candidate.hasCalledAnElection) {
+//       req.flash("error", "You have already launched an election.");
+//       return res.redirect("/candidate-dashboard");
+//     }
+
+//     // Create new election
+//     const newElection = new Election({
+//       type,
+//       startDate,
+//       endDate,
+//       createdBy: creatorId,
+//       candidates: [creatorId],
+//       electionContext,
+//     });
+
+//     await newElection.save();
+
+//     // Update candidate's election status
+//     candidate.hasCalledAnElection = true;
+//     candidate.electionsCalled += 1;
+//     await candidate.save();
+
+//     req.flash("success", "Election created successfully!");
+//     return res.redirect("/candidate-dashboard");
+//   } catch (error) {
+//     console.error("Election creation error:", error);
+//     req.flash("error", "An error occurred while creating the election.");
+//     return res.redirect("/candidate-dashboard");
+//   }
+// };
 
 // Showing the edit form for an election
 

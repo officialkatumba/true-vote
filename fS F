@@ -1,0 +1,113 @@
+[33mcommit 7d6d8c0b402f5f240fb5c19a664d410d24c0a1d2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon May 26 17:55:58 2025 +0200
+
+    Prepare for Heroku deployment
+
+[33mcommit 16b240f045f8cd465511badb3a735f18dda92d1d[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Sat May 24 16:53:09 2025 +0200
+
+    add use redis for session working right
+
+[33mcommit fbfb8ac041217bad4505df91ab89fe16033af7ef[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Fri May 23 12:25:24 2025 +0200
+
+     Joi schema added to candidate,election.vote,rejectionmay be user through candidate registration
+
+[33mcommit a1d755c6d31f86f5695f81fdaf627e873276f797[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Thu May 22 18:49:20 2025 +0200
+
+    Add restrict the access to pdfs inght to iopnly paid up members they only get the demographic analisis for free
+
+[33mcommit a1fd296836d2f7e4bf8e74c803bd6b085419185b[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Thu May 22 16:16:21 2025 +0200
+
+     Add sweet alert to several routes
+
+[33mcommit 806fc24a4d52598051e6d085313011a4c50dbdf3[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Tue May 20 10:10:10 2025 +0200
+
+    Fine tuning dashboard added number and more
+
+[33mcommit 9660a7b0838b0375e3402a19e69e90ba5ebad793[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Sat May 17 14:29:35 2025 +0200
+
+    add to template the partials for uniformity:
+
+[33mcommit 4b1f272a96fc801965eca9e02112ef1ef59f4bbb[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Wed May 14 11:51:42 2025 +0200
+
+    Add change and reset password
+
+[33mcommit 71b9a93a4e236bee83c939d0ae136524501e7f1e[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon May 12 12:51:37 2025 +0200
+
+     add candidate edit fucntionality
+
+[33mcommit 03ddf40f4f76156a42a087cfb6be410f26049b7a[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Sat May 10 17:53:09 2025 +0200
+
+    add working pgdf insight and downloadin
+
+[33mcommit e3e063f79f763eafdd77b98523e5cca81a542220[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Fri May 9 21:18:28 2025 +0200
+
+    Add working report.ejs and ability to mupload to google storage
+
+[33mcommit 4b4d81314e7c6ee44902209dae6949397d5382bc[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon May 5 22:38:00 2025 +0200
+
+    Add backend/key.json to .gitignore
+
+[33mcommit e19176c18ebc75022b7e50cdef43bfd47f0fe973[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon May 5 22:34:37 2025 +0200
+
+    Remove secret file and update .gitignore
+
+[33mcommit f17a58c8c0d42a4b0f20c7a8dfc6417dbcb354eb[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon May 5 22:18:34 2025 +0200
+
+    Remove key.json from tracking
+
+[33mcommit 2ea7d6e6def86711c2f092387a4e527c6251248d[m[33m ([m[1;32mpdf-working-restore[m[33m)[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon May 5 18:28:41 2025 +0200
+
+    add first succesful ai report pdf
+
+[33mcommit eac2b6c480a627143b5af3235ca4856a581f2f2b[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon Apr 28 17:19:19 2025 +0200
+
+     Add the logic to genarte multiple insights and save them to db form report page
+
+[33mcommit d72bd3203470a33274dfd2deec5f99d194c6c523[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Mon Apr 21 18:05:56 2025 +0200
+
+     add the abity to view candidate summary of an election plus the local insight page to enhaced with ai
+
+[33mcommit 1975577ce43a99300e07a68c751e3a35ead20a80[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Sun Apr 20 17:38:02 2025 +0200
+
+    Fine tuning voting and rejecting forms and schema
+
+[33mcommit 6d87f7893f4eeaa2a51046bdeb8d65073b6efa06[m
+Author: officialkatumba <officialkatumba@gmail.com>
+Date:   Sat Apr 19 19:10:26 2025 +0200
+
+    Initial commit

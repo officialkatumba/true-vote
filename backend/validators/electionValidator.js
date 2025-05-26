@@ -22,7 +22,7 @@ const electionValidationSchema = Joi.object({
     .items(Joi.string().custom(objectIdValidator))
     .default([]),
 
-  createdBy: Joi.string().custom(objectIdValidator).required(),
+  createdBy: Joi.string().custom(objectIdValidator).optional(),
 
   electionStatus: Joi.string()
     .valid("draft", "ongoing", "completed", "canceled")
