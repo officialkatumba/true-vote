@@ -13,7 +13,7 @@
   >
     <h2 class="text-center mb-4">Create a New Election</h2>
 
-    <form action="/api/elections/create" method="POST">
+    <form action="/api/elections/create" id="createElectionForm" method="POST">
       <div class="mb-3">
         <label for="type" class="form-label">Election Type *</label>
         <select name="type" id="type" class="form-select" required>
@@ -68,3 +68,46 @@
 </div>
 
 <%- include('../partials/footer') %>
+<script>
+  document.querySelector("form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/elections/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: result.message,
+        });
+
+        window.location.href = "/candidate-dashboard";
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: result.message,
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Something went wrong. Try again later.",
+      });
+    }
+  });
+</script>
