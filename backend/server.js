@@ -43,12 +43,25 @@ const app = express();
 
 // Redis client setup
 
-const redisClient = new Redis({
+// const redisClient = new Redis({
+//   host: process.env.REDIS_HOST,
+//   port: process.env.REDIS_PORT,
+//   password: process.env.REDIS_PASSWORD,
+//   tls: process.env.NODE_ENV === "production" ? {} : undefined,
+// });
+
+const redisOptions = {
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
   password: process.env.REDIS_PASSWORD,
-  tls: process.env.NODE_ENV === "production" ? {} : undefined,
-});
+};
+
+// Only enable TLS if explicitly told to
+if (process.env.REDIS_USE_TLS === "true") {
+  redisOptions.tls = {};
+}
+
+const redisClient = new Redis(redisOptions);
 
 // Optional: log connection events
 redisClient.on("connect", () => {
