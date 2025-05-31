@@ -12,6 +12,7 @@ const User = require("./models/User");
 const connectDB = require("./config/db");
 const cron = require("node-cron");
 const Election = require("./models/Election");
+require("./utils/autoLauncher");
 
 dotenv.config();
 connectDB();

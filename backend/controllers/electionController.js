@@ -494,6 +494,7 @@ exports.launchElection = async (req, res) => {
 
     // Launch the election
     election.electionStatus = "ongoing";
+    election.startDate = new Date(); // Set start date to now
     await election.save();
 
     // Directly render the myElections.ejs page
