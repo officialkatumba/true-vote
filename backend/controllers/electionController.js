@@ -82,38 +82,6 @@ exports.showEditElectionForm = async (req, res) => {
 
 // Handling the form to edit an election
 
-// exports.updateElection = async (req, res) => {
-//   try {
-//     const { type, startDate, endDate } = req.body;
-//     const election = await Election.findById(req.params.id);
-
-//     if (!election || election.electionStatus !== "draft") {
-//       return res.status(403).render("error", {
-//         errorMessage: "Only draft elections can be edited",
-//       });
-//     }
-
-//     // Ensure only the creator can edit
-//     if (!election.createdBy.equals(req.user.candidate._id)) {
-//       return res.status(403).render("error", {
-//         errorMessage: "You are not authorized to edit this election",
-//       });
-//     }
-
-//     election.type = type;
-//     election.startDate = new Date(startDate);
-//     election.endDate = new Date(endDate);
-//     await election.save();
-
-//     res.redirect(`/api/elections/${election._id}`);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).render("error", {
-//       errorMessage: "Error updating election",
-//     });
-//   }
-// };
-
 exports.updateElection = async (req, res) => {
   try {
     const { type, startDate, endDate } = req.body;
@@ -145,17 +113,36 @@ exports.updateElection = async (req, res) => {
 };
 
 // GET /elections/my-elections - View all elections called by the current candidate
+
 exports.getMyElections = async (req, res) => {
   try {
     const candidateId = req.user.candidate._id;
+    const { electionNumber, page = 1, limit = 10 } = req.query;
+    const query = { createdBy: candidateId };
 
-    const elections = await Election.find({ createdBy: candidateId })
-      .sort({ startDate: -1 }) // Sort by newest first
-      .populate("candidates"); // Populate candidate details if needed
+    if (electionNumber) {
+      query.electionNumber = Number(electionNumber);
+    }
+
+    const totalCount = await Election.countDocuments(query);
+    const elections = await Election.find(query)
+      .sort({ startDate: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .populate("candidates");
 
     res.render("elections/myElections", {
       elections,
-      currentDate: new Date(), // Pass current date for status comparison
+      currentDate: new Date(),
+      pagination: {
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: parseInt(page),
+        totalCount,
+        limit: parseInt(limit),
+      },
+      search: {
+        electionNumber,
+      },
     });
   } catch (error) {
     console.error(error);
@@ -166,41 +153,146 @@ exports.getMyElections = async (req, res) => {
 };
 
 // GET /elections/participated - Elections the candidate has joined (not necessarily created)
+// exports.getParticipatedElections = async (req, res) => {
+//   try {
+//     const candidateId = req.user.candidate._id;
+
+//     const elections = await Election.find({
+//       candidates: candidateId,
+//     })
+//       .sort({ startDate: -1 })
+//       .populate("candidates");
+
+//     // Generate vote summary per election (needed for AI insights table)
+//     const voteMap = {};
+
+//     for (const election of elections) {
+//       const candidateStats = election.votes?.find(
+//         (vote) => vote.candidate.toString() === candidateId.toString()
+//       );
+
+//       voteMap[election._id.toString()] = {
+//         votes: candidateStats?.votes || 0,
+//         voteLost: candidateStats?.voteLost || 0,
+//       };
+//     }
+
+//     res.render("elections/electionsParticipated", {
+//       elections,
+//       voteMap,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).render("error", {
+//       errorMessage: "Error loading your participated elections",
+//     });
+//   }
+// };
+
+// // GET /elections/participated
+// exports.getParticipatedElections = async (req, res) => {
+//   try {
+//     const candidateId = req.user.candidate._id;
+//     const { search = "", page = 1, limit = 10 } = req.query;
+
+//     const query = {
+//       candidates: candidateId,
+//       ...(search && { electionNumber: { $regex: search, $options: "i" } }),
+//     };
+
+//     const totalCount = await Election.countDocuments(query);
+//     const elections = await Election.find(query)
+//       .sort({ startDate: -1 })
+//       .skip((page - 1) * limit)
+//       .limit(parseInt(limit))
+//       .populate("candidates");
+
+//     // Generate vote summary per election
+//     const voteMap = elections.reduce((acc, election) => {
+//       const candidateStats = election.votes?.find(
+//         (vote) => vote.candidate.toString() === candidateId.toString()
+//       );
+
+//       acc[election._id.toString()] = {
+//         votes: candidateStats?.votes || 0,
+//         voteLost: candidateStats?.voteLost || 0,
+//       };
+//       return acc;
+//     }, {});
+
+//     res.render("elections/electionsParticipated", {
+//       elections,
+//       voteMap,
+//       currentDate: new Date(),
+//       pagination: {
+//         totalPages: Math.ceil(totalCount / limit),
+//         currentPage: parseInt(page),
+//         totalCount,
+//         limit: parseInt(limit),
+//       },
+//       search: {
+//         term: search,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error loading participated elections:", error);
+//     res.status(500).render("error", {
+//       errorMessage: "Error loading your participated elections",
+//     });
+//   }
+// };
+
 exports.getParticipatedElections = async (req, res) => {
   try {
     const candidateId = req.user.candidate._id;
+    const { electionNumber, page = 1, limit = 10 } = req.query;
+    const query = { candidates: candidateId };
 
-    const elections = await Election.find({
-      candidates: candidateId,
-    })
+    if (electionNumber) {
+      query.electionNumber = Number(electionNumber);
+    }
+
+    const totalCount = await Election.countDocuments(query);
+    const elections = await Election.find(query)
       .sort({ startDate: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
       .populate("candidates");
 
-    // Generate vote summary per election (needed for AI insights table)
+    // Generate vote summary
     const voteMap = {};
-
-    for (const election of elections) {
+    elections.forEach((election) => {
       const candidateStats = election.votes?.find(
         (vote) => vote.candidate.toString() === candidateId.toString()
       );
-
-      voteMap[election._id.toString()] = {
+      voteMap[election._id] = {
         votes: candidateStats?.votes || 0,
         voteLost: candidateStats?.voteLost || 0,
       };
-    }
+    });
 
     res.render("elections/electionsParticipated", {
       elections,
       voteMap,
+      currentDate: new Date(),
+      pagination: {
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: parseInt(page),
+        totalCount,
+        limit: parseInt(limit),
+      },
+      search: {
+        electionNumber,
+      },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error loading participated elections:", error);
     res.status(500).render("error", {
       errorMessage: "Error loading your participated elections",
     });
   }
 };
+
 // // GET /elections/participated - Elections the candidate has joined (not necessarily created)
 // exports.getParticipatedElections = async (req, res) => {
 //   try {
@@ -276,48 +368,54 @@ exports.getParticipatedElections = async (req, res) => {
 // const Vote = require("../models/Vote");
 // const Election = require("../models/Election");
 
+// MAYBE DUPLICATE  // MAYBE DUPLICATE
+// MAYBE DUPLICATE
+// MAYBE DUPLICATE
+// MAYBE DUPLICATE
+// MAYBE DUPLICATE
+
 // GET /elections/participated - Elections the candidate has joined
-exports.getParticipatedElections = async (req, res) => {
-  try {
-    const candidateId = req.user.candidate._id;
+// exports.getParticipatedElections = async (req, res) => {
+//   try {
+//     const candidateId = req.user.candidate._id;
 
-    // Find elections where this candidate participated
-    const elections = await Election.find({
-      candidates: candidateId,
-    })
-      .sort({ startDate: -1 })
-      .populate("candidates");
+//     // Find elections where this candidate participated
+//     const elections = await Election.find({
+//       candidates: candidateId,
+//     })
+//       .sort({ startDate: -1 })
+//       .populate("candidates");
 
-    // Build voteMap by fetching actual vote counts from the Vote collection
-    const voteMap = {};
+//     // Build voteMap by fetching actual vote counts from the Vote collection
+//     const voteMap = {};
 
-    for (const election of elections) {
-      // Get votes for this candidate in this election
-      const votesInFavor = await Vote.countDocuments({
-        election: election._id,
-        candidate: candidateId,
-      });
+//     for (const election of elections) {
+//       // Get votes for this candidate in this election
+//       const votesInFavor = await Vote.countDocuments({
+//         election: election._id,
+//         candidate: candidateId,
+//       });
 
-      const votesAgainst = await Vote.countDocuments({
-        election: election._id,
-        candidate: { $ne: candidateId },
-      });
+//       const votesAgainst = await Vote.countDocuments({
+//         election: election._id,
+//         candidate: { $ne: candidateId },
+//       });
 
-      voteMap[election._id.toString()] = {
-        votes: votesInFavor,
-        voteLost: votesAgainst,
-      };
-    }
+//       voteMap[election._id.toString()] = {
+//         votes: votesInFavor,
+//         voteLost: votesAgainst,
+//       };
+//     }
 
-    res.render("elections/electionsParticipated", {
-      elections,
-      voteMap,
-    });
-  } catch (error) {
-    console.error("Error in getParticipatedElections:", error);
-    res.status(500).send("Error loading your participated elections");
-  }
-};
+//     res.render("elections/electionsParticipated", {
+//       elections,
+//       voteMap,
+//     });
+//   } catch (error) {
+//     console.error("Error in getParticipatedElections:", error);
+//     res.status(500).send("Error loading your participated elections");
+//   }
+// };
 
 // // // GET /elections/:id – View election details
 
