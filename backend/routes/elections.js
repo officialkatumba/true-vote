@@ -65,11 +65,52 @@ router.get("/ongoing", async (req, res) => {
   }
 });
 
-// Main elections list view
+// // Main elections list view
+// router.get("/", async (req, res) => {
+//   try {
+//     const elections = await Election.find().populate("candidates");
+//     res.render("elections/index", { elections, user: req.user });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).render("error", {
+//       title: "Error",
+//       errorMessage: "Unable to fetch elections",
+//       user: req.user,
+//     });
+//   }
+// });
+
 router.get("/", async (req, res) => {
   try {
-    const elections = await Election.find().populate("candidates");
-    res.render("elections/index", { elections, user: req.user });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search?.trim() || "";
+
+    const query = {};
+
+    if (search) {
+      const numberSearch = parseInt(search);
+      if (!isNaN(numberSearch)) {
+        query.electionNumber = numberSearch;
+      }
+    }
+
+    const total = await Election.countDocuments(query);
+
+    const elections = await Election.find(query)
+      .sort({ startDate: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("candidates");
+
+    res.render("elections/index", {
+      elections,
+      user: req.user,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      limit,
+      search,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).render("error", {

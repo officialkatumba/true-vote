@@ -71,3 +71,6 @@ frontend/public/pdfs/
 #Key file
 backend/key.jsonbackend/key.json
 backend/key.json
+
+#seed file
+backend/seed-admins.js

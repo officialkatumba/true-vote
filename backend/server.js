@@ -22,35 +22,6 @@ const RedisStore = require("connect-redis").default; // Correct for v7.1.1
 
 const app = express();
 
-// Session middleware (must come before passport & flash)
-// app.use(
-//   session({
-//     secret: process.env.SESSION_SECRET || "yourSecret",
-//     resave: false,
-//     saveUninitialized: false,
-//     store: MongoStore.create({
-//       mongoUrl: process.env.MONGO_URI,
-//       ttl: 2 * 60 * 60,
-//     }),
-//     name: "sessionId",
-//     cookie: {
-//       httpOnly: true,
-//       maxAge: 1000 * 60 * 60 * 2,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//     },
-//   })
-// );
-
-// Redis client setup
-
-// const redisClient = new Redis({
-//   host: process.env.REDIS_HOST,
-//   port: process.env.REDIS_PORT,
-//   password: process.env.REDIS_PASSWORD,
-//   tls: process.env.NODE_ENV === "production" ? {} : undefined,
-// });
-
 const redisOptions = {
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
