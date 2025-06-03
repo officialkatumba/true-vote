@@ -1,103 +1,24 @@
-// // validations/rejection.js
-// const Joi = require("joi");
-
-// // Custom validator for ObjectId
-// const objectIdValidator = (value, helpers) => {
-//   if (!mongoose.Types.ObjectId.isValid(value)) {
-//     return helpers.error("any.invalid");
-//   }
-//   return value;
-// };
-
-// const rejectionValidationSchema = Joi.object({
-//   // Required fields
-//   election: Joi.string().required(),
-//   reason: Joi.string().required(),
-//   relativeVoteLikelihood: Joi.boolean().required(),
-//   voucher: Joi.string().required(),
-
-//   // Optional demographic fields
-//   age: Joi.number().optional(),
-//   gender: Joi.string().valid("male", "female", "other").optional(),
-//   highestEducation: Joi.string()
-//     .valid(
-//       "none",
-//       "primary",
-//       "secondary",
-//       "diploma",
-//       "bachelor",
-//       "master",
-//       "PhD"
-//     )
-//     .optional(),
-//   employmentStatus: Joi.string()
-//     .valid("employed", "unemployed", "self-employed", "student")
-//     .optional(),
-//   maritalStatus: Joi.string()
-//     .valid(
-//       "single",
-//       "married",
-//       "divorced",
-//       "married parent",
-//       "single mom",
-//       "single dad"
-//     )
-//     .optional(),
-//   religiousStatus: Joi.string()
-//     .valid("not religious", "slightly religious", "very religious")
-//     .optional(),
-//   dwellingType: Joi.string().valid("urban", "rural").optional(),
-//   familyDwellingType: Joi.string().valid("urban", "rural").optional(),
-
-//   // Optional location fields
-//   provinceOfStudy: Joi.string().optional(),
-//   schoolCompletionLocation: Joi.string().optional(),
-//   district: Joi.string().optional(),
-//   constituency: Joi.string().optional(),
-
-//   // Optional economic fields
-//   averageMonthlyRent: Joi.number().optional(),
-//   sectorOfOperation: Joi.string()
-//     .valid(
-//       "marketeer",
-//       "online trader",
-//       "cross-border trader",
-//       "small business owner",
-//       "street vendor"
-//     )
-//     .optional(),
-
-//   // Optional opinion fields
-//   dislikesAboutCandidate: Joi.string().optional(),
-//   expectationsFromCandidate: Joi.string().optional(),
-//   reasonForRelativeVote: Joi.string().optional(),
-//   usualPartySupport: Joi.string().optional(),
-//   familiarWithPolicies: Joi.boolean().optional(),
-//   policyUnderstanding: Joi.string().optional(),
-// });
-
-// module.exports = rejectionValidationSchema;
-
+// validators/rejectionValidator.js
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
-// Custom validator for ObjectId
-const objectIdValidator = (value, helpers) => {
+const objectId = (value, helpers) => {
   if (!mongoose.Types.ObjectId.isValid(value)) {
     return helpers.error("any.invalid");
   }
   return value;
 };
 
-const rejectionValidationSchema = Joi.object({
-  electionId: Joi.string().custom(objectIdValidator).required(), // changed key here
-  reason: Joi.string().required(),
-  relativeVoteLikelihood: Joi.boolean().required(),
-  voucher: Joi.string().custom(objectIdValidator).optional(), // add validation for voucher as ObjectId
+const rejectionJoiSchema = Joi.object({
+  election: Joi.string().custom(objectId).required(),
+  // voucher: Joi.string().custom(objectId).required(),
+  voucher: Joi.any().forbidden(),
 
-  // Optional demographic fields
-  age: Joi.number().optional(),
-  gender: Joi.string().valid("male", "female", "other").optional(),
+  // reason: Joi.string().optional(),
+
+  // Demographics
+  age: Joi.number().min(0).max(150).optional(),
+  gender: Joi.string().valid("male", "female", "other").required(),
   highestEducation: Joi.string()
     .valid(
       "none",
@@ -108,10 +29,8 @@ const rejectionValidationSchema = Joi.object({
       "master",
       "PhD"
     )
-    .optional(),
-  employmentStatus: Joi.string()
-    .valid("employed", "unemployed", "self-employed", "student")
-    .optional(),
+    .required(),
+  incomeLevel: Joi.string().valid("low", "medium", "high").required(),
   maritalStatus: Joi.string()
     .valid(
       "single",
@@ -121,38 +40,36 @@ const rejectionValidationSchema = Joi.object({
       "single mom",
       "single dad"
     )
-    .optional(),
+    .required(),
   religiousStatus: Joi.string()
     .valid("not religious", "slightly religious", "very religious")
-    .optional(),
-  dwellingType: Joi.string().valid("urban", "rural").optional(),
-  familyDwellingType: Joi.string().valid("urban", "rural").optional(),
+    .required(),
+  dwellingType: Joi.string().valid("urban", "rural").required(),
+  familyDwellingType: Joi.string().valid("urban", "rural").required(),
 
-  // Optional location fields
-  provinceOfStudy: Joi.string().optional(),
-  schoolCompletionLocation: Joi.string().optional(),
-  district: Joi.string().optional(),
-  constituency: Joi.string().optional(),
+  // Education
+  provinceOfStudy: Joi.string().required(),
+  schoolCompletionLocation: Joi.string().required(),
 
-  // Optional economic fields
-  averageMonthlyRent: Joi.number().optional(),
+  // Voting eligibility
+  votingEligibility2026: Joi.string().valid("yes", "no", "not_sure").required(),
+
+  // Financial
   sectorOfOperation: Joi.string()
-    .valid(
-      "marketeer",
-      "online trader",
-      "cross-border trader",
-      "small business owner",
-      "street vendor"
-    )
-    .optional(),
+    .valid("employee", "marketeer", "unemployed", "trader")
+    .required(),
 
-  // Optional opinion fields
-  dislikesAboutCandidate: Joi.string().optional(),
-  expectationsFromCandidate: Joi.string().optional(),
-  reasonForRelativeVote: Joi.string().optional(),
-  usualPartySupport: Joi.string().optional(),
-  familiarWithPolicies: Joi.boolean().optional(),
-  policyUnderstanding: Joi.string().optional(),
+  // Insights
+  relativeVoteLikelihood: Joi.boolean().required(),
+  reasonForRelativeVote: Joi.string().required(),
+  expectationsFromCandidate: Joi.string().allow(""),
+  usualPartySupport: Joi.string().required(),
+  reasonForVoting: Joi.string().required(),
+  familiarWithPolicies: Joi.boolean().required(),
+  policyUnderstanding: Joi.string().allow(""),
+
+  // Optional client-side field
+  submittedAt: Joi.date().optional(),
 });
 
-module.exports = rejectionValidationSchema;
+module.exports = rejectionJoiSchema;

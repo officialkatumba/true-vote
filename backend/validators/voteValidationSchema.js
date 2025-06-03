@@ -12,9 +12,10 @@ const objectIdValidator = (value, helpers) => {
 const voteValidationSchema = Joi.object({
   electionId: Joi.string().custom(objectIdValidator).required(),
   candidateId: Joi.string().custom(objectIdValidator).required(),
-  voucherId: Joi.string().custom(objectIdValidator).optional(),
+  // voucherId: Joi.string().custom(objectIdValidator).optional(), // Changed to required
+  voucher: Joi.any().forbidden(),
 
-  voteTime: Joi.date().optional(),
+  voteTime: Joi.date().default(Date.now), // Added default
 
   age: Joi.number().integer().min(18).required(),
   gender: Joi.string().valid("male", "female", "other").required(),
@@ -29,9 +30,7 @@ const voteValidationSchema = Joi.object({
       "PhD"
     )
     .required(),
-  employmentStatus: Joi.string()
-    .valid("employed", "unemployed", "self-employed", "student")
-    .required(),
+  // Removed employmentStatus as it's commented out in schema
   maritalStatus: Joi.string()
     .valid(
       "single",
@@ -50,21 +49,21 @@ const voteValidationSchema = Joi.object({
 
   provinceOfStudy: Joi.string().required(),
   schoolCompletionLocation: Joi.string().required(),
-  district: Joi.string().optional(),
-  constituency: Joi.string().optional(),
+  // district: Joi.string().optional(),
+  // constituency: Joi.string().optional(),
+  votingEligibility2026: Joi.string().valid("yes", "no", "not_sure").required(),
 
-  averageMonthlyRent: Joi.number().required(),
+  // Replaced averageMonthlyRent with incomeLevel
+  incomeLevel: Joi.string()
+    .valid("low", "medium", "high")
+    .default("medium")
+    .required(),
+
   sectorOfOperation: Joi.string()
-    .valid(
-      "marketeer",
-      "online trader",
-      "cross-border trader",
-      "small business Owner",
-      "street vendor"
-    )
-    .optional(),
+    .valid("employee", "marketeer", "unemployed", "trader")
+    .required(),
 
-  dislikesAboutCandidate: Joi.string().trim().optional(),
+  // Removed dislikesAboutCandidate as it's commented out in schema
   expectationsFromCandidate: Joi.string().trim().optional(),
 
   relativeVoteLikelihood: Joi.boolean().required(),

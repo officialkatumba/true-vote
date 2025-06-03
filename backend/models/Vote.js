@@ -35,11 +35,11 @@ const voteSchema = new mongoose.Schema({
       "PhD",
     ],
   }, // Highest level of education
-  employmentStatus: {
-    type: String,
-    required: true,
-    enum: ["employed", "unemployed", "self-employed", "student"],
-  }, // Job status
+  // employmentStatus: {
+  //   type: String,
+  //   required: true,
+  //   enum: ["employed", "unemployed", "self-employed", "student"],
+  // }, // Job status
   maritalStatus: {
     type: String,
     required: true,
@@ -67,27 +67,45 @@ const voteSchema = new mongoose.Schema({
   // 🔹 Education & Background
   provinceOfStudy: { type: String, required: true }, // Province where voter studied
   schoolCompletionLocation: { type: String, required: true }, // Where they completed school
-  district: String,
-  constituency: String,
+  // district: String,
+  // constituency: String,
+  // votingEligibility2026: {
+  //   type: String,
+  //   enum: ["yes", "no", "not_sure"],
+  //   required: true,
+  // },
 
   // 🔹 Financial Status (Captured Discreetly)
-  averageMonthlyRent: { type: Number, required: true }, // Voter's financial situation
   sectorOfOperation: {
     type: String,
+    required: true,
     enum: [
-      "marketeer",
-      "online trader",
-      "cross-border trader",
-      "small business Owner",
-      "street vendor",
+      "employee", // Formal employment
+      "marketeer", // Marketing professionals
+      "unemployed", // Currently not working
+      "trader", // General traders (combines online/cross-border traders)
     ],
   },
 
-  dislikesAboutCandidate: {
+  // With this:
+  incomeLevel: {
     type: String,
-    required: false,
-    trim: true,
-  }, // Optional: Captures what the voter dislikes about the candidate (useful for approval rating analysis)
+    required: true,
+    enum: ["low", "medium", "high"],
+    default: "medium", // Optional: set a default if appropriate
+  },
+
+  votingEligibility2026: {
+    type: String,
+    enum: ["yes", "no", "not_sure"],
+    required: true,
+  },
+
+  // dislikesAboutCandidate: {
+  //   type: String,
+  //   required: false,
+  //   trim: true,
+  // }, // Optional: Captures what the voter dislikes about the candidate (useful for approval rating analysis)
 
   expectationsFromCandidate: {
     type: String,

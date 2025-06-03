@@ -23,25 +23,6 @@ const electionSchema = new mongoose.Schema({
     default: "",
   },
 
-  // aiInsights: {
-  //   type: Map,
-  //   of: new mongoose.Schema(
-  //     {
-  //       "Demographic Profile": { type: String, default: null },
-  //       "Educational Journey": { type: String, default: null },
-  //       "Living Context": { type: String, default: null },
-  //       "Economic Factors": { type: String, default: null },
-  //       "Policy Awareness & Political Behavior": {
-  //         type: String,
-  //         default: null,
-  //       },
-  //       "Sentiment & Expectations": { type: String, default: null },
-  //     },
-  //     { _id: false }
-  //   ),
-  //   default: {},
-  // },
-
   aiInsights: {
     type: Map,
     of: new mongoose.Schema(

@@ -5,14 +5,21 @@
     <!-- Admin Profile Hero -->
     <div class="profile-hero mb-5">
       <div class="profile-image-container mb-4">
-        <img
+        <!-- <img
           src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+          alt="Admin"
+          class="profile-img-large rounded-circle"
+        /> -->
+
+        <img
+          src="<%= adminProfile.profileImage || 'https://cdn-icons-png.flaticon.com/512/149/149071.png' %>"
           alt="Admin"
           class="profile-img-large rounded-circle"
         />
       </div>
 
-      <h1 class="welcome-heading">Admin: <%= user.email %></h1>
+      <!-- <h1 class="welcome-heading">Admin: <%= user.email %></h1> -->
+      <h1 class="welcome-heading">Admin: <%= adminProfile.name %></h1>
 
       <!-- Admin Info Card -->
       <div class="detail-card mt-4 shadow fancy-detail">
