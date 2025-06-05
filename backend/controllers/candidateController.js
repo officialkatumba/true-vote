@@ -126,3 +126,199 @@ exports.updateCandidate = async (req, res) => {
     res.redirect("/candidates/edit");
   }
 };
+
+//  View All cnadidates
+
+// exports.getAllCandidates = async (req, res) => {
+//   try {
+//     const search = req.query.search || "";
+//     const limit = parseInt(req.query.limit) || 10;
+//     const page = parseInt(req.query.page) || 1;
+
+//     const query = search ? { name: { $regex: search, $options: "i" } } : {};
+
+//     const totalCandidates = await Candidate.countDocuments(query);
+//     const totalPages = Math.ceil(totalCandidates / limit);
+
+//     const candidates = await Candidate.find(query, "candidateNumber name _id")
+//       .sort({ candidateNumber: 1 })
+//       .skip((page - 1) * limit)
+//       .limit(limit);
+
+//     res.render("candidates/list", {
+//       candidates,
+//       search,
+//       limit,
+//       currentPage: page,
+//       totalPages,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching candidates:", err);
+//     res.status(500).send("Server error");
+//   }
+// };
+
+exports.getAllCandidates = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const membershipStatus = req.query.membershipStatus || "";
+
+    const query = {};
+
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+
+    if (membershipStatus) {
+      query.membershipStatus = membershipStatus;
+    }
+
+    const totalCandidates = await Candidate.countDocuments(query);
+    const totalPages = Math.ceil(totalCandidates / limit);
+
+    const candidates = await Candidate.find(
+      query,
+      "candidateNumber name _id membershipStatus"
+    )
+      .sort({ candidateNumber: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.render("candidates/list", {
+      candidates,
+      search,
+      limit,
+      membershipStatus,
+      currentPage: page,
+      totalPages,
+    });
+  } catch (err) {
+    console.error("Error fetching candidates:", err);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.getCandidateByAdmin = async (req, res) => {
+  try {
+    const candidateId = req.params.id;
+
+    // Load candidate details
+    const candidate = await Candidate.findById(candidateId);
+
+    if (!candidate) {
+      return res.status(404).send("Candidate not found");
+    }
+
+    // Find the associated user (if needed, depends on schema)
+    const user = await User.findOne({ candidate: candidateId });
+
+    res.render("candidates/candidateByAdmin", {
+      user: {
+        email: user?.email || "Not Available",
+        candidate,
+      },
+    });
+  } catch (error) {
+    console.error("Error loading candidate by admin:", error);
+    res.status(500).send("Server Error");
+  }
+};
+
+exports.activateMembership = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).render("error", {
+        errorMessage: "Candidate not found",
+      });
+    }
+
+    // Only admins can activate membership
+    if (req.user.role !== "system_admin") {
+      return res.status(403).render("error", {
+        errorMessage: "You are not authorized to perform this action",
+      });
+    }
+
+    // If already active, prevent reactivation
+    if (candidate.membershipStatus === "active") {
+      return res.status(400).render("error", {
+        errorMessage: "Membership is already active",
+      });
+    }
+
+    // Activate membership
+    candidate.membershipStatus = "active";
+
+    // Set expiry to December 31st of current year
+    const now = new Date();
+    const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+    candidate.membershipExpiresOn = endOfYear;
+
+    await candidate.save();
+
+    res.redirect(`/candidates/${candidate._id}`); // redirect back to profile
+  } catch (error) {
+    console.error(error);
+    res.status(500).render("error", {
+      errorMessage: "Failed to activate membership",
+    });
+  }
+};
+
+// GET /candidates/:id/edit-membership
+exports.showEditMembershipForm = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res
+        .status(404)
+        .render("error", { errorMessage: "Candidate not found" });
+    }
+
+    // Only admin allowed
+    if (req.user.role !== "system_admin") {
+      return res
+        .status(403)
+        .render("error", { errorMessage: "Unauthorized access" });
+    }
+
+    res.render("candidates/editMembership", { candidate, user: req.user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render("error", { errorMessage: "Server error" });
+  }
+};
+
+// POST /candidates/:id/update-membership
+exports.updateMembership = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Candidate not found" });
+    }
+
+    if (req.user.role !== "system_admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    candidate.membershipStatus = req.body.membershipStatus;
+    candidate.membershipExpiresOn = new Date(req.body.membershipExpiresOn);
+
+    await candidate.save();
+
+    res.json({ success: true, message: "Membership updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update membership" });
+  }
+};

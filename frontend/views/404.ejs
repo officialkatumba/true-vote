@@ -1,0 +1,17 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container py-5">
+  <div class="text-center">
+    <h1 class="display-4 text-warning mb-4">404</h1>
+    <h2 class="mb-3">Page Not Found</h2>
+    <p class="lead mb-4">
+      <%= message || "The page you're looking for doesn't exist or has been
+      moved." %>
+    </p>
+    <a href="/api/users/logout" class="btn btn-outline-danger">
+      <i class="fas fa-sign-out-alt me-2"></i>Logout
+    </a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

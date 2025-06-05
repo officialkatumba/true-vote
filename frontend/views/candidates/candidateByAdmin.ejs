@@ -1,0 +1,128 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<!-- Admin View Ribbon -->
+<div
+  class="alert alert-warning text-center rounded-0 mb-0 py-2"
+  role="alert"
+  style="font-size: 0.95rem"
+>
+  <i class="fas fa-user-shield me-2"></i><strong>Admin View:</strong> You are
+  viewing this candidate’s profile as an administrator.
+</div>
+
+<div class="content container py-5">
+  <div class="dashboard-container text-center">
+    <div class="profile-hero mb-5">
+      <!-- Profile Image -->
+      <div class="profile-image-container mb-4">
+        <img
+          src="<%= candidate.profileImage || 'https://cdn.pixabay.com/photo/2020/07/27/17/40/flag-5443011_960_720.jpg' %>"
+          alt="Profile"
+          class="profile-img-large rounded-circle"
+        />
+      </div>
+
+      <!-- Welcome Message -->
+      <h1 class="welcome-heading"><%= candidate.name || user.email %></h1>
+
+      <!-- Candidate Info Card -->
+      <div class="detail-card mt-4 shadow fancy-detail">
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-id-badge icon-highlight me-2"></i> Candidate
+            Number:
+          </div>
+          <div class="detail-value">
+            <%= candidate.candidateNumber || 'Not Available' %>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-envelope me-2"></i> Email Address:
+          </div>
+          <div class="detail-value"><%= user.email || 'No Email' %></div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-phone-alt me-2"></i> Mobile Number:
+          </div>
+          <div class="detail-value">
+            <%= candidate.mobile || 'Not Provided' %>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-bullhorn me-2"></i> Elections Called:
+          </div>
+          <div class="detail-value"><%= candidate.electionsCalled || 0 %></div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-users me-2"></i> Elections Joined:
+          </div>
+          <div class="detail-value"><%= candidate.electionsJoined || 0 %></div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-user-check me-2"></i> Membership Status:
+          </div>
+          <div class="detail-value">
+            <%= candidate.membershipStatus || 'Unknown' %>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-calendar-alt me-2"></i> Membership Expiry:
+          </div>
+          <div class="detail-value">
+            <% if (candidate.membershipExpiresOn) { %> <%= new
+            Date(candidate.membershipExpiresOn).toLocaleDateString() %> <% }
+            else { %> Not set <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Actions -->
+      <!-- Dashboard Actions -->
+      <div class="dashboard-actions mt-5">
+        <% if (candidate.membershipStatus !== 'active') { %>
+        <form
+          action="/candidates/<%= candidate._id %>/activate-membership"
+          method="POST"
+          class="d-inline"
+        >
+          <button class="btn btn-action btn-primary" type="submit">
+            <i class="fas fa-check-circle me-1"></i> Activate Membership
+          </button>
+        </form>
+        <% } else { %>
+        <button class="btn btn-secondary" disabled>
+          <i class="fas fa-check-circle me-1"></i> Membership Active
+        </button>
+        <% } %>
+
+        <!-- <a
+          href="/api/candidates/edit"
+          class="btn btn-action btn-outline-primary ms-2"
+        >
+          <i class="fas fa-user-edit"></i> Edit Membership
+        </a> -->
+
+        <a
+          href="/candidates/<%= candidate._id %>/edit-membership"
+          class="btn btn-outline-secondary ms-2"
+        >
+          <i class="fas fa-id-card-alt"></i> Edit Membership
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

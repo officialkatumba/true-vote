@@ -1,0 +1,17 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container py-5">
+  <div class="text-center">
+    <h1 class="display-4 text-danger mb-4">500</h1>
+    <h2 class="mb-3">Oops! Internal Server Error</h2>
+    <p class="lead mb-4">
+      <%= message || "Something went wrong on our end. Please try again later."
+      %>
+    </p>
+    <a href="/api/users/logout" class="btn btn-outline-danger">
+      <i class="fas fa-sign-out-alt me-2"></i>Logout
+    </a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

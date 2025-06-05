@@ -140,6 +140,32 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
+// Cron: Auto-update membership status to 'pending' if expired
+cron.schedule("0 * * * *", async () => {
+  try {
+    const now = new Date();
+    const result = await User.updateMany(
+      {
+        membershipStatus: "active",
+        membershipExpiryDate: { $lt: now },
+      },
+      {
+        $set: { membershipStatus: "pending" },
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log(
+        `⏳ Membership status updated to 'pending' for ${
+          result.modifiedCount
+        } user(s) at ${now.toISOString()}`
+      );
+    }
+  } catch (err) {
+    console.error("❌ Membership cron job error:", err.message);
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

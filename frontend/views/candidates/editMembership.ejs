@@ -1,0 +1,88 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="content container py-5">
+  <div
+    class="form-container mx-auto"
+    style="
+      max-width: 500px;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    "
+  >
+    <h2 class="text-center mb-4">Edit Membership</h2>
+
+    <form action="/candidates/<%= candidate._id %>/update-membership" method="POST" id="editMembershipForm">
+      <div class="mb-3">
+        <label for="membershipStatus" class="form-label">Membership Status *</label>
+        <select name="membershipStatus" id="membershipStatus" class="form-select" required>
+          <option value="inactive" <%= candidate.membershipStatus === 'inactive' ? 'selected' : '' %>>Inactive</option>
+          <option value="active" <%= candidate.membershipStatus === 'active' ? 'selected' : '' %>>Active</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label for="membershipExpiresOn" class="form-label">Membership Expiry Date *</label>
+        <input
+          type="datetime-local"
+          name="membershipExpiresOn"
+          id="membershipExpiresOn"
+          class="form-control"
+          required
+          value="<%= candidate.membershipExpiresOn ? candidate.membershipExpiresOn.toISOString().slice(0, 16) : '' %>"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">
+        Update Membership
+      </button>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  document.getElementById("editMembershipForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: result.message,
+        });
+
+        window.location.href = `/candidates/<%= candidate._id %>`;
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: result.message,
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Something went wrong. Try again later.",
+      });
+    }
+  });
+</script>
