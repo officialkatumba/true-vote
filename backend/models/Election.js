@@ -23,6 +23,40 @@ const electionSchema = new mongoose.Schema({
     default: "",
   },
 
+  // aiInsights: {
+  //   type: Map,
+  //   of: new mongoose.Schema(
+  //     {
+  //       "Demographic Profile": {
+  //         content: { type: String, default: null },
+  //         pdfUploaded: { type: Boolean, default: false },
+  //       },
+  //       "Educational Journey": {
+  //         content: { type: String, default: null },
+  //         pdfUploaded: { type: Boolean, default: false },
+  //       },
+  //       "Living Context": {
+  //         content: { type: String, default: null },
+  //         pdfUploaded: { type: Boolean, default: false },
+  //       },
+  //       "Economic Factors": {
+  //         content: { type: String, default: null },
+  //         pdfUploaded: { type: Boolean, default: false },
+  //       },
+  //       "Policy Awareness & Political Behavior": {
+  //         content: { type: String, default: null },
+  //         pdfUploaded: { type: Boolean, default: false },
+  //       },
+  //       "Sentiment & Expectations": {
+  //         content: { type: String, default: null },
+  //         pdfUploaded: { type: Boolean, default: false },
+  //       },
+  //     },
+  //     { _id: false }
+  //   ),
+  //   default: {},
+  // },
+
   aiInsights: {
     type: Map,
     of: new mongoose.Schema(
@@ -48,6 +82,14 @@ const electionSchema = new mongoose.Schema({
           pdfUploaded: { type: Boolean, default: false },
         },
         "Sentiment & Expectations": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Consolidated Insight": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
+        "Probability of Victory": {
           content: { type: String, default: null },
           pdfUploaded: { type: Boolean, default: false },
         },

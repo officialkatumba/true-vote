@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const insightsController = require("../controllers/insightsController");
+// const insightsController = require("../controllers/insightsController");
 const ensureAuthenticated = require("../middlewares/auth");
+
+const insightsController = require("../controllers/insightsController");
 
 const { viewInsightPdf } = require("../controllers/insightsController");
 
@@ -59,6 +61,17 @@ router.post(
   "/:id/generate-sentiment",
   ensureAuthenticated,
   generateSentimentInsight
+);
+
+router.post(
+  "/:id/generate-consolidated",
+  ensureAuthenticated,
+  insightsController.generateConsolidatedInsight
+);
+router.post(
+  "/:id/generate-probability",
+  ensureAuthenticated,
+  insightsController.generateVictoryProbability
 );
 
 module.exports = router;
