@@ -113,6 +113,9 @@ app.use("/api/insights", require("./routes/insights"));
 app.use("/", require("./routes/dashboard"));
 app.use("/candidates", require("./routes/candidates"));
 app.use("/users", require("./routes/users"));
+app.get("/vote/voting-closed", (req, res) => {
+  res.render("vote/voting-closed");
+});
 
 // Cron: Auto-complete elections
 cron.schedule("* * * * *", async () => {

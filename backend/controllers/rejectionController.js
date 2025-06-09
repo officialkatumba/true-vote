@@ -134,6 +134,86 @@ exports.getRejectForm = async (req, res) => {
 //   }
 // };
 
+// exports.submitRejection = async (req, res) => {
+//   try {
+//     const electionId = req.params.electionId;
+
+//     const {
+//       reason,
+//       relativeVoteLikelihood,
+//       age,
+//       gender,
+//       highestEducation,
+//       employmentStatus,
+//       maritalStatus,
+//       religiousStatus,
+//       dwellingType,
+//       familyDwellingType,
+//       provinceOfStudy,
+//       schoolCompletionLocation,
+//       district,
+//       constituency,
+//       averageMonthlyRent,
+//       sectorOfOperation,
+//       dislikesAboutCandidate,
+//       expectationsFromCandidate,
+//       reasonForRelativeVote,
+//       usualPartySupport,
+//       familiarWithPolicies,
+//       policyUnderstanding,
+//     } = req.body;
+
+//     const election = await Election.findById(electionId);
+//     if (!election || election.electionStatus !== "ongoing") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Election is not active or does not exist.",
+//       });
+//     }
+
+//     const voucher = await Voucher.create({});
+
+//     const rejection = new Rejection({
+//       election: electionId,
+//       reason,
+//       relativeVoteLikelihood: relativeVoteLikelihood === "true",
+//       voucher: voucher._id,
+//       age,
+//       gender,
+//       highestEducation,
+//       employmentStatus,
+//       maritalStatus,
+//       religiousStatus,
+//       dwellingType,
+//       familyDwellingType,
+//       provinceOfStudy,
+//       schoolCompletionLocation,
+//       district,
+//       constituency,
+//       averageMonthlyRent,
+//       sectorOfOperation,
+//       dislikesAboutCandidate,
+//       expectationsFromCandidate,
+//       reasonForRelativeVote,
+//       usualPartySupport,
+//       familiarWithPolicies: familiarWithPolicies === "true",
+//       policyUnderstanding,
+//     });
+
+//     await rejection.save();
+
+//     return res.redirect(
+//       `/api/votes/thank-you?voucherNumber=${voucher.voucherNumber}`
+//     );
+//   } catch (err) {
+//     console.error("❌ Rejection submission error:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "An unexpected error occurred. Please try again later.",
+//     });
+//   }
+// };
+
 exports.submitRejection = async (req, res) => {
   try {
     const electionId = req.params.electionId;
@@ -163,6 +243,7 @@ exports.submitRejection = async (req, res) => {
       policyUnderstanding,
     } = req.body;
 
+    // Step 1: Fetch and validate election
     const election = await Election.findById(electionId);
     if (!election || election.electionStatus !== "ongoing") {
       return res.status(400).json({
@@ -171,8 +252,22 @@ exports.submitRejection = async (req, res) => {
       });
     }
 
+    // Step 2: Block if vote/rejection cap reached
+    // if (election.totalVoteAndRejection >= 1000) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Voting limit reached. No more votes or rejections allowed.",
+    //   });
+    // }
+
+    if (election.totalVoteAndRejection >= 1000) {
+      return res.redirect("/vote/voting-closed");
+    }
+
+    // Step 3: Create voucher
     const voucher = await Voucher.create({});
 
+    // Step 4: Create and save rejection
     const rejection = new Rejection({
       election: electionId,
       reason,
@@ -200,8 +295,20 @@ exports.submitRejection = async (req, res) => {
       policyUnderstanding,
     });
 
-    await rejection.save();
+    await rejection.save(); // ✅ Save first
 
+    // Step 5: Increment counts after successful save
+    election.totalRejections += 1;
+    election.totalVoteAndRejection += 1;
+
+    // Step 6: Mark election as completed if 1000 limit reached
+    if (election.totalVoteAndRejection >= 1000) {
+      election.electionStatus = "completed";
+    }
+
+    await election.save();
+
+    // Step 7: Redirect to thank-you page
     return res.redirect(
       `/api/votes/thank-you?voucherNumber=${voucher.voucherNumber}`
     );

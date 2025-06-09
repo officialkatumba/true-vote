@@ -103,4 +103,49 @@ router.post(
   candidateController.updateMembership
 );
 
+// router.post("/:id/verify", async (req, res) => {
+//   try {
+//     await Candidate.findByIdAndUpdate(req.params.id, { verified: true });
+//     req.flash("success", "Candidate identity verified.");
+//     res.redirect("back");
+//   } catch (error) {
+//     console.error("Verification error:", error);
+//     req.flash("error", "Failed to verify candidate.");
+//     res.redirect("back");
+//   }
+// });
+
+// POST /candidates/:id/verify
+
+router.post("/:id/verify", async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      req.flash("error", "Candidate not found.");
+      return res.redirect("/candidates");
+    }
+
+    if (req.user.role !== "system_admin") {
+      req.flash("error", "You are not authorized to perform this action.");
+      return res.redirect(`/candidates/${req.params.id}`);
+    }
+
+    if (candidate.verified) {
+      req.flash("error", "Candidate identity is already verified.");
+      return res.redirect(`/candidates/${candidate._id}`);
+    }
+
+    candidate.verified = true;
+    await candidate.save();
+
+    req.flash("success", "Candidate identity verified.");
+    res.redirect(`/candidates/${candidate._id}`);
+  } catch (error) {
+    console.error("Verification error:", error);
+    req.flash("error", "Failed to verify candidate.");
+    res.redirect(`/candidates/${req.params.id}`);
+  }
+});
+
 module.exports = router;

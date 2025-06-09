@@ -25,6 +25,18 @@ const candidateSchema = new mongoose.Schema({
     required: false, // Optional if not all candidates have a membership
   },
 
+  // ✅ Verification field
+  verified: {
+    type: Boolean,
+    default: false, // All new candidates are unverified by default
+  },
+
+  registeredForElectionType: {
+    type: String,
+    enum: ["presidential", "parliamentary", "mayoral", "councillor"],
+    required: true,
+  },
+
   // 🆕 Tracking fields
 
   hasCalledAnElection: {

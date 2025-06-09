@@ -17,7 +17,10 @@ const electionSchema = new mongoose.Schema({
     type: Number, // store duration in milliseconds
     required: false,
   },
-
+  totalVoteAndRejection: {
+    type: Number,
+    default: 0,
+  },
   electionContext: {
     type: String,
     default: "",

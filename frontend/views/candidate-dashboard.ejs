@@ -1,5 +1,13 @@
 <%- include('partials/header') %> <%- include('partials/navbar') %>
 
+<% if (user.candidate && !user.candidate.verified) { %>
+  <div class="alert alert-warning text-center mb-0 rounded-0" role="alert" style="font-weight: 500;">
+    ⚠️ You are currently <strong>unverified</strong>. Please reach out to the admin via 
+    <a href="tel:+260966658181" class="fw-bold">0966658181</a> to complete your identity verification 
+    and unlock the ability to call elections.
+  </div>
+<% } %>
+
 <div class="content container py-5">
   <div class="dashboard-container text-center">
     <div class="profile-hero mb-5">

@@ -41,6 +41,24 @@
       </div>
 
       <div class="mb-3">
+        <label for="registeredForElectionType" class="form-label">
+          Election Type You're Registering For *
+        </label>
+        <select
+          name="registeredForElectionType"
+          id="registeredForElectionType"
+          class="form-control"
+          required
+        >
+          <option value="">-- Select Election Type --</option>
+          <option value="presidential">Presidential</option>
+          <option value="parliamentary">Parliamentary</option>
+          <option value="mayoral">Mayoral</option>
+          <option value="councillor">Councillor</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
         <label for="password" class="form-label">Password *</label>
         <input
           type="password"

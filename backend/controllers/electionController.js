@@ -8,13 +8,75 @@ exports.showCreateElectionForm = (req, res) => {
   res.render("elections/create"); // EJS form (to be created)
 };
 
-// POST /api/elections/create – Create election and link creator
+// // POST /api/elections/create – Create election and link creator
+// exports.createElection = async (req, res) => {
+//   try {
+//     const { type, startDate, endDate, electionContext } = req.body;
+//     const creatorId = req.user.candidate._id;
+//     const candidate = await Candidate.findById(creatorId);
+
+//     if (
+//       candidate.membershipStatus !== "active" &&
+//       candidate.hasCalledAnElection
+//     ) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           "Please contact admin to activate your account for more elections.",
+//       });
+//     }
+
+//     const newElection = new Election({
+//       type,
+//       startDate,
+//       endDate,
+//       createdBy: creatorId,
+//       candidates: [creatorId],
+//       electionContext,
+//     });
+
+//     await newElection.save();
+
+//     candidate.hasCalledAnElection = true;
+//     candidate.electionsCalled += 1;
+//     await candidate.save();
+
+//     return res
+//       .status(201)
+//       .json({ success: true, message: "Election created successfully!" });
+//   } catch (error) {
+//     console.error("Election creation error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error. Could not create election.",
+//     });
+//   }
+// };
+
 exports.createElection = async (req, res) => {
   try {
     const { type, startDate, endDate, electionContext } = req.body;
     const creatorId = req.user.candidate._id;
     const candidate = await Candidate.findById(creatorId);
 
+    // 🚫 Block unverified candidates
+    if (!candidate.verified) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You are not verified. Please contact admin via 0966658181 to verify your identity before creating an election.",
+      });
+    }
+
+    // Block if election type mismatch
+    if (candidate.registeredForElectionType !== type) {
+      return res.status(403).json({
+        success: false,
+        message: `You are only allowed to create a ${candidate.registeredForElectionType} election.`,
+      });
+    }
+
+    // 🚫 Block non-active members who already called one election
     if (
       candidate.membershipStatus !== "active" &&
       candidate.hasCalledAnElection
@@ -26,6 +88,7 @@ exports.createElection = async (req, res) => {
       });
     }
 
+    // ✅ Proceed to create election
     const newElection = new Election({
       type,
       startDate,
@@ -526,6 +589,7 @@ exports.getElection = async (req, res) => {
       election,
       user: populatedUser,
       voteMap,
+      totalVoteAndRejection: election.totalVoteAndRejection, // pass it explicitly if needed
     });
   } catch (error) {
     console.error(error);
