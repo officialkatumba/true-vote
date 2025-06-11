@@ -20,6 +20,9 @@ const candidateValidationSchema = Joi.object({
   party: Joi.string().default("Independent"),
   profileImage: Joi.string().uri().optional(),
   partySymbol: Joi.string().uri().optional(),
+  registeredForElectionType: Joi.string()
+    .valid("presidential", "parliamentary", "mayoral", "councillor")
+    .required(),
 
   membershipStatus: Joi.string()
     .valid("active", "pending", "expired")
