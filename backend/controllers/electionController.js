@@ -55,7 +55,7 @@ exports.showCreateElectionForm = (req, res) => {
 
 exports.createElection = async (req, res) => {
   try {
-    const { type, startDate, endDate, electionContext } = req.body;
+    const { type, startDate, endDate, electionContext, willRunIn } = req.body;
     const creatorId = req.user.candidate._id;
     const candidate = await Candidate.findById(creatorId);
 
@@ -93,6 +93,7 @@ exports.createElection = async (req, res) => {
       type,
       startDate,
       endDate,
+      willRunIn,
       createdBy: creatorId,
       candidates: [creatorId],
       electionContext,
@@ -147,7 +148,7 @@ exports.showEditElectionForm = async (req, res) => {
 
 exports.updateElection = async (req, res) => {
   try {
-    const { type, startDate, endDate } = req.body;
+    const { type, startDate, endDate, willRunIn } = req.body;
     const election = await Election.findById(req.params.id);
 
     if (!election || election.electionStatus !== "draft") {
@@ -164,6 +165,8 @@ exports.updateElection = async (req, res) => {
     election.type = type;
     election.startDate = new Date(startDate);
     election.endDate = new Date(endDate);
+    election.willRunIn = willRunIn; // ✅ Added this line to update willRunIn
+
     await election.save();
 
     req.flash("success", "Election updated successfully!");

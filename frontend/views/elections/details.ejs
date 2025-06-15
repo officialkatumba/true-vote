@@ -9,158 +9,167 @@
           Election #<%= election.electionNumber %> (<%=
           election.type.toUpperCase() %>)
         </h3>
-        <span class="badge text-bg-info">
-          <%= election.electionStatus.toUpperCase() %>
-        </span>
+        <span class="badge text-bg-info"
+          ><%= election.electionStatus.toUpperCase() %></span
+        >
       </div>
 
-      <!-- New Total Votes + Rejections count -->
+      <!-- Total Votes + Rejections count -->
       <div class="mb-4 text-center">
         <span class="badge bg-warning text-dark fs-5 p-3 shadow-sm">
-          🗳️ Total Submissions:
-          <strong><%= totalVoteAndRejection %></strong>
+          🗳️ Total Submissions: <strong><%= totalVoteAndRejection %></strong>
         </span>
       </div>
 
-      <!-- Timer Section -->
-      <div class="timer-container">
+      <!-- Timer -->
+      <div class="timer-container text-center mb-4">
         <div class="timer-label" id="timerLabel">TIME REMAINING</div>
         <div class="timer" id="electionTimer">00:00:00:00</div>
-        <div class="timer-meta">
-          <small>
-            <strong>Start:</strong> <%= new
+        <div class="timer-meta mt-1">
+          <small
+            ><strong>Start:</strong> <%= new
             Date(election.startDate).toLocaleString() %> |
             <strong>End:</strong> <%= new
-            Date(election.endDate).toLocaleString() %>
-          </small>
+            Date(election.endDate).toLocaleString() %></small
+          >
         </div>
       </div>
 
       <hr />
 
-      <!-- Candidate Join Info -->
-      <% if (election.electionStatus === "draft" && new Date(election.endDate) >
-      new Date() && user && user._id.toString() !==
-      election.createdBy._id.toString()) { %>
-      <form
-        action="/api/elections/<%= election._id %>/add-candidate"
-        method="POST"
-        class="mb-4"
-      >
-        <div class="input-group">
-          <input
-            type="text"
-            name="candidateNumber"
-            class="form-control"
-            placeholder="Enter your candidate number to join"
-            required
+      <!-- Candidate Section -->
+      <h4 class="text-center mb-4 fw-bold">🗳️ Candidate</h4>
+
+      <div class="d-flex justify-content-center">
+        <div
+          class="candidate-item text-center p-4 shadow-sm border rounded"
+          style="max-width: 600px; width: 100%"
+        >
+          <img
+            src="<%= election.candidates[0].profileImage || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
+            class="img-fluid rounded-circle mb-3"
+            style="width: 150px; height: 150px; object-fit: cover"
+            alt="Candidate"
           />
-          <button type="submit" class="btn btn-primary">Join Election</button>
-        </div>
-      </form>
-      <% } else if (!user && election.electionStatus === "draft") { %>
-      <div class="alert alert-info text-center mb-4">
-        You can join this election if you're a candidate. Please
-        <a href="/api/users/login">login</a>.
-      </div>
-      <% } else if (new Date(election.endDate) <= new Date()) { %>
-      <div class="alert alert-warning text-center mb-4">
-        This election has ended. Voting is closed.
-      </div>
-      <% } %>
 
-      <!-- Candidate List -->
-      <h4 class="text-center mb-4 fw-bold">🗳️ Contestants</h4>
+          <h5 class="fw-bold"><%= election.candidates[0].name %></h5>
+          <p class="text-muted fst-italic mb-2">
+            Will Run In: <%= election.willRunIn || 'N/A' %>
+          </p>
+          <p class="text-muted fst-italic mb-3">
+            Party: <%= election.candidates[0].party || 'N/A' %>
+          </p>
 
-      <div class="row g-4">
-        <% election.candidates.forEach(candidate => { const stats =
-        voteMap[candidate._id.toString()]; const isWinner = stats.statusLabel
-        === "Leading" && election.electionStatus === "completed"; const isLoser
-        = election.electionStatus === "completed" && stats.statusLabel !==
-        "Leading"; const percentage = election.candidates.length === 1 &&
-        (stats.votes + stats.voteLost) > 0 ? ((stats.votes / (stats.votes +
-        stats.voteLost)) * 100).toFixed(1) : null; %>
-        <div class="col-sm-6 col-md-4">
-          <div
-            class="candidate-item <%= isWinner ? 'winner' : '' %> <%= isLoser ? 'loser' : '' %>"
-          >
-            <img
-              src="<%= candidate.profileImage || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
-              alt="Candidate"
-              class="candidate-img img-fluid rounded-circle"
-              style="width: 150px; height: 150px; object-fit: cover"
-            />
-            <h5 class="mt-2"><%= candidate.name %></h5>
+          <!-- Manifesto -->
+          <!-- <h6 class="mt-4 mb-2 text-decoration-underline">
+            A Summary Manifesto
+          </h6>
+          <% const bio = election.candidates[0].bio || ""; %>
+          <div class="manifesto-content">
+            <%- bio.replace(/\n{2,}/g, '<br /><br />').replace(/\n/g, '<br />')
+            %>
+          </div> -->
 
-            <!-- Status Badge -->
-            <% if (isWinner) { %>
-            <span class="badge bg-success badge-status badge-winner">
-              <i class="fas fa-trophy"></i> Winner
-            </span>
-            <% } else if (stats.statusLabel === "Leading") { %>
-            <span class="badge bg-success badge-status">
-              <i class="fas fa-star"></i> Leading
-            </span>
-            <% } else if (stats.statusLabel === "Contested") { %>
-            <span class="badge bg-warning text-dark badge-status">
-              <i class="fas fa-balance-scale"></i> Contested
-            </span>
-            <% } else if (stats.statusLabel === "Rejected") { %>
-            <span class="badge bg-danger badge-status">
-              <i class="fas fa-times-circle"></i> Rejected
-            </span>
-            <% } %>
+          <!-- Manifesto -->
+          <h6 class="mt-4 mb-2 text-decoration-underline">
+            A Summary Manifesto
+          </h6>
+          <div class="manifesto-container">
+            <div class="manifesto-content" id="manifestoContent">
+              <%- (election.candidates[0].bio || "").replace(/\n{2,}/g, '<br /><br />').replace(/\n/g,
+              '<br />') %>
+            </div>
+            <button class="manifesto-toggle-btn" id="manifestoToggle">
+              Read More <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
 
-            <p class="text-muted mt-2 mb-1">
-              ✅ <small>Votes: <strong><%= stats.votes %></strong></small>
-            </p>
-
-            <% if (election.candidates.length === 1) { %>
-            <p class="text-muted mb-1">
-              ❌ <small>Against: <strong><%= stats.voteLost %></strong></small>
-            </p>
-            <% if (percentage !== null) { %>
-            <p class="text-muted mb-2">
-              📊 <small>Approval: <strong><%= percentage %>%</strong></small>
-            </p>
-            <% } %> <% } %>
-
-            <!-- Show vote/reject buttons only if user is NOT logged in -->
-            <% if (!user && election.electionStatus === "ongoing") { %> <% if
-            (election.candidates.length > 1) { %>
-            <a
-              href="/api/votes/<%= election._id %>/vote/<%= candidate._id %>"
-              class="btn btn-success btn-sm mt-2"
-            >
-              Vote
-            </a>
-            <% } else { %>
-            <div class="d-flex gap-2 justify-content-center mt-2">
+          <!-- Voting Question -->
+          <% if (!user && election.electionStatus === "ongoing") { %>
+          <div class="voting-question text-center mt-4 mb-3">
+            <h5 class="fw-bold mb-3">
+              Are you supporting <%= election.candidates[0].name %> For 2026
+              Elections?
+            </h5>
+            <div class="d-flex gap-2 justify-content-center">
               <a
-                href="/api/votes/<%= election._id %>/vote/<%= candidate._id %>"
+                href="/api/votes/<%= election._id %>/vote/<%= election.candidates[0]._id %>"
                 class="btn btn-success btn-sm"
               >
-                Vote
+                <i class="fas fa-check-circle"></i> Yes
               </a>
               <a
                 href="/api/votes/<%= election._id %>/reject"
                 class="btn btn-danger btn-sm"
               >
-                Reject
+                <i class="fas fa-times-circle"></i> No
               </a>
             </div>
-            <% } %> <% } %>
+          </div>
+          <% } %>
+
+          <!-- Voting Status -->
+          <% const stats = voteMap[election.candidates[0]._id.toString()] || {
+          votes: 0, voteLost: 0 }; const percentage = (stats.votes +
+          stats.voteLost) > 0 ? ((stats.votes / (stats.votes + stats.voteLost))
+          * 100).toFixed(1) : null; %>
+          <div class="vote-status mt-3 mb-3 small text-muted">
+            ✅ Yes: <strong><%= stats.votes %></strong> | ❌ No:
+            <strong><%= stats.voteLost %></strong> <% if (percentage !== null) {
+            %> | 📊 Approval: <strong><%= percentage %>%</strong>
+            <% } %>
           </div>
         </div>
-        <% }); %>
       </div>
     </div>
   </div>
-
   <%- include('../partials/footer') %>
 </div>
 
-<!-- Timer Script -->
+<style>
+  .manifesto-content {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    padding: 0.5rem 1rem;
+    white-space: pre-wrap;
+    text-align: left;
+  }
+
+  .vote-status {
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  .btn-sm i {
+    margin-right: 5px;
+  }
+
+  .timer-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 5px solid #0d6efd;
+  }
+
+  .timer-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    letter-spacing: 1px;
+  }
+
+  .timer {
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: "Courier New", monospace;
+    color: #343a40;
+  }
+
+  .timer-meta {
+    color: #6c757d;
+  }
+</style>
+
 <script>
   const startDate = new Date("<%= election.startDate %>");
   const endDate = new Date("<%= election.endDate %>");
@@ -208,4 +217,29 @@
     timerLabel.textContent = "ELECTION ENDED";
     timerElement.textContent = "00:00:00:00";
   }
+</script>
+
+<script>
+  // Manifesto toggle functionality
+  const manifestoContent = document.getElementById("manifestoContent");
+  const manifestoToggle = document.getElementById("manifestoToggle");
+
+  // Only show toggle if content is long enough to need truncation
+  if (manifestoContent.scrollHeight > manifestoContent.clientHeight) {
+    manifestoToggle.style.display = "inline-flex";
+  } else {
+    manifestoToggle.style.display = "none";
+  }
+
+  manifestoToggle.addEventListener("click", () => {
+    manifestoContent.classList.toggle("expanded");
+    manifestoToggle.classList.toggle("expanded");
+
+    if (manifestoContent.classList.contains("expanded")) {
+      manifestoToggle.innerHTML = 'Read Less <i class="fas fa-chevron-up"></i>';
+    } else {
+      manifestoToggle.innerHTML =
+        'Read More <i class="fas fa-chevron-down"></i>';
+    }
+  });
 </script>

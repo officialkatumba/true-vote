@@ -69,6 +69,15 @@
 
         <div class="detail-row">
           <div class="detail-label">
+            <i class="fas fa-vote-yea me-2"></i> Registered For:
+          </div>
+          <div class="detail-value">
+            <%= candidate.registeredForElectionType || 'Not Specified' %>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
             <i class="fas fa-user-check me-2"></i> Membership Status:
           </div>
           <div class="detail-value">

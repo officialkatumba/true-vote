@@ -26,6 +26,11 @@ const electionSchema = new mongoose.Schema({
     default: "",
   },
 
+  willRunIn: {
+    type: String,
+    required: true, // Examples: "Zambia", "Ndola District", "Chimwemwe Constituency", "Itawa Ward"
+  },
+
   // aiInsights: {
   //   type: Map,
   //   of: new mongoose.Schema(

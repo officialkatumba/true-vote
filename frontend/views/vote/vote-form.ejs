@@ -45,7 +45,7 @@
 
           <div class="text-center mb-4">
             <p class="fs-5">
-              To vote for
+              To show support for
               <span
                 style="
                   font-weight: bold;
@@ -61,6 +61,17 @@
 
           <!-- ADD onsubmit HERE -->
           <form action="/api/votes/cast" method="POST" onsubmit="showOverlay()">
+            <div
+              class="alert alert-info mb-4 d-flex align-items-center"
+              style="gap: 0.75rem"
+            >
+              <i class="fas fa-lock fs-4"></i>
+              <div>
+                <strong>Your privacy is protected</strong><br />
+                Your opinion on this platform is completely anonymous. No one
+                can identify you by submitting this form.
+              </div>
+            </div>
             <!-- Form fields stay unchanged -->
 
             <!-- Hidden Inputs -->

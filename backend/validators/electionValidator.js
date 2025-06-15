@@ -27,6 +27,9 @@ const electionValidationSchema = Joi.object({
   electionStatus: Joi.string()
     .valid("draft", "ongoing", "completed", "canceled")
     .default("draft"),
+  willRunIn: Joi.string()
+    .required()
+    .label("Constituency / District / Ward / Country"),
 
   // Optional: you usually won’t set this on create
   electionDurationMs: Joi.number().optional(),

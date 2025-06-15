@@ -69,7 +69,7 @@
         />
       </div>
 
-      <div class="mb-3">
+      <!-- <div class="mb-3">
         <label for="bio" class="form-label">Short Bio *</label>
         <textarea
           name="bio"
@@ -78,14 +78,52 @@
           class="form-control"
           required
         ></textarea>
-      </div>
+      </div> -->
 
       <div class="mb-3">
+        <label for="manifesto" class="form-label"
+          >Summary Manifesto (50-150 words) *</label
+        >
+        <textarea
+          name="manifesto"
+          id="manifesto"
+          rows="4"
+          class="form-control"
+          required
+          placeholder="Write a summary manifesto between 50 and 150 words..."
+        ></textarea>
+        <small id="wordCount" class="form-text text-muted">0 / 150 words</small>
+
+        <!-- Bootstrap Alert Placeholder -->
+        <div
+          id="wordCountAlert"
+          class="alert alert-danger mt-2 d-none"
+          role="alert"
+        >
+          Please ensure your Summary Manifesto is between 20 and 150 words.
+        </div>
+      </div>
+
+      <!-- <div class="mb-3">
         <label for="party" class="form-label">Political Party</label>
         <input type="text" name="party" id="party" class="form-control" />
-      </div>
+      </div> -->
 
       <div class="mb-3">
+        <label for="party" class="form-label"
+          >Enter your Political Party (or "Independent" if none) *</label
+        >
+        <input
+          type="text"
+          name="party"
+          id="party"
+          class="form-control"
+          placeholder="e.g. United Development Front or Independent"
+          required
+        />
+      </div>
+
+      <!-- <div class="mb-3">
         <label for="profileImage" class="form-label">Profile Image URL</label>
         <input
           type="url"
@@ -93,9 +131,21 @@
           id="profileImage"
           class="form-control"
         />
+      </div> -->
+
+      <div class="mb-3 d-none">
+        <label for="profileImage" class="form-label">Profile Image URL</label>
+        <input
+          type="url"
+          name="profileImage"
+          id="profileImage"
+          class="form-control"
+          value="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+          readonly
+        />
       </div>
 
-      <div class="mb-3">
+      <!-- <div class="mb-3">
         <label for="partySymbol" class="form-label"
           >Party Symbol Image URL</label
         >
@@ -105,6 +155,20 @@
           id="partySymbol"
           class="form-control"
         />
+      </div> -->
+
+      <div class="mb-3 d-none">
+        <label for="partySymbol" class="form-label"
+          >Party Symbol Image URL</label
+        >
+        <input
+          type="url"
+          name="partySymbol"
+          id="partySymbol"
+          class="form-control"
+          value="https://cdn-icons-png.flaticon.com/512/252/252035.png"
+          readonly
+        />
       </div>
 
       <button type="submit" class="btn btn-primary w-100">Register</button>
@@ -113,3 +177,62 @@
 </div>
 
 <%- include('partials/footer') %>
+
+<script>
+  const textarea = document.getElementById("manifesto");
+  const wordCountDisplay = document.getElementById("wordCount");
+  const alertBox = document.getElementById("wordCountAlert");
+
+  function countWords(text) {
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
+  }
+
+  textarea.addEventListener("input", () => {
+    const words = countWords(textarea.value);
+    wordCountDisplay.textContent = `${words} / 150 words`;
+
+    if (words < 50) {
+      wordCountDisplay.style.color = "red";
+      alertBox.textContent = `Please enter at least 50 words. You have entered ${words}.`;
+      alertBox.classList.remove("d-none");
+      alertBox.classList.remove("alert-success");
+      alertBox.classList.add("alert-danger");
+    } else if (words > 150) {
+      wordCountDisplay.style.color = "red";
+      alertBox.textContent = `You have exceeded the 150-word limit by ${
+        words - 150
+      } word${words - 150 === 1 ? "" : "s"}.`;
+      alertBox.classList.remove("d-none");
+      alertBox.classList.remove("alert-success");
+      alertBox.classList.add("alert-danger");
+    } else {
+      wordCountDisplay.style.color = "green";
+      alertBox.textContent = "Word count is good! (50-150 words)";
+      alertBox.classList.remove("d-none");
+      alertBox.classList.remove("alert-danger");
+      alertBox.classList.add("alert-success");
+    }
+  });
+
+  const form = textarea.closest("form");
+  form.addEventListener("submit", (e) => {
+    const words = countWords(textarea.value);
+    if (words < 50 || words > 150) {
+      e.preventDefault();
+      if (words < 50) {
+        alertBox.textContent = `Please enter at least 50 words. You have entered ${words}.`;
+      } else {
+        alertBox.textContent = `You have exceeded the 150-word limit by ${
+          words - 150
+        } word${words - 150 === 1 ? "" : "s"}.`;
+      }
+      alertBox.classList.remove("d-none");
+      alertBox.classList.remove("alert-success");
+      alertBox.classList.add("alert-danger");
+      textarea.focus();
+    }
+  });
+</script>

@@ -25,6 +25,20 @@
         </select>
       </div>
 
+      <div class="mb-3">
+  <label for="willRunIn" class="form-label">Will Run In</label>
+  <input
+    type="text"
+    name="willRunIn"
+    id="willRunIn"
+    class="form-control"
+    value="<%= election.willRunIn || '' %>"
+    placeholder="e.g. Zambia, Ndola District, Chimwemwe Constituency, Itawa Ward"
+    required
+  />
+</div>
+
+
       <!-- ✅ Edit Field: Election Context -->
       <div class="mb-4">
         <label for="electionContext" class="form-label">

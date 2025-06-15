@@ -447,3 +447,65 @@ footer {
 .swal2-popup {
   font-size: 1.1rem;
 }
+
+/* */
+
+/* Manifesto Styles */
+.manifesto-container {
+  position: relative;
+}
+
+.manifesto-content {
+  line-height: 1.5em;
+  text-align: left;
+  margin: 0 auto;
+  padding: 0.8rem;
+  max-height: 4.5em; /* Shows exactly 3 lines (1.5em x 3) */
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.3s ease;
+  background-color: rgba(236, 240, 241, 0.3);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+}
+
+.manifesto-content.expanded {
+  max-height: none;
+}
+
+.manifesto-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.manifesto-toggle-btn:hover {
+  color: var(--secondary);
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.manifesto-toggle-btn i {
+  transition: transform 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.manifesto-toggle-btn.expanded i {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 768px) {
+  .manifesto-content {
+    padding: 0.6rem;
+    font-size: 0.95rem;
+  }
+}

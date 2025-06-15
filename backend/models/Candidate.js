@@ -30,7 +30,11 @@ const candidateSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // All new candidates are unverified by default
   },
-
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // or "SystemAdmin"
+    default: null,
+  },
   registeredForElectionType: {
     type: String,
     enum: ["presidential", "parliamentary", "mayoral", "councillor"],
