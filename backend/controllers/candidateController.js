@@ -202,28 +202,110 @@ exports.getAllCandidates = async (req, res) => {
   }
 };
 
+// exports.getCandidateByAdmin = async (req, res) => {
+//   try {
+//     const candidateId = req.params.id;
+
+//     // Load candidate details
+//     const candidate = await Candidate.findById(candidateId);
+
+//     if (!candidate) {
+//       return res.status(404).send("Candidate not found");
+//     }
+
+//     // Find the associated user (if needed, depends on schema)
+//     const user = await User.findOne({ candidate: candidateId });
+
+//     res.render("candidates/candidateByAdmin", {
+//       user: {
+//         email: user?.email || "Not Available",
+//         candidate,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error loading candidate by admin:", error);
+//     res.status(500).send("Server Error");
+//   }
+// };
+
+// exports.getCandidateByAdmin = async (req, res) => {
+//   try {
+//     const candidateId = req.params.id;
+
+//     // Load candidate details and populate the verifying admin
+//     const candidate = await Candidate.findById(candidateId).populate(
+//       "verifiedBy",
+//       "email"
+//     );
+
+//     if (!candidate) {
+//       return res.status(404).send("Candidate not found");
+//     }
+
+//     // Find the associated user account
+//     const user = await User.findOne({ candidate: candidateId });
+
+//     res.render("candidates/candidateByAdmin", {
+//       user: {
+//         email: user?.email || "Not Available",
+//         candidate,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error loading candidate by admin:", error);
+//     res.status(500).send("Server Error");
+//   }
+// };
+
+// exports.getCandidateByAdmin = async (req, res) => {
+//   try {
+//     const candidateId = req.params.id;
+
+//     // Load candidate and populate who verified
+//     const candidate = await Candidate.findById(candidateId).populate(
+//       "verifiedBy",
+//       "email"
+//     );
+
+//     if (!candidate) {
+//       return res.status(404).send("Candidate not found");
+//     }
+
+//     // Associated user account (for email)
+//     const user = await User.findOne({ candidate: candidateId });
+
+//     res.render("candidates/candidateByAdmin", {
+//       userEmail: user?.email || "Not Available",
+//       candidate, // ✅ pass candidate directly so you can access candidate.verifiedBy
+//     });
+//   } catch (error) {
+//     console.error("Error loading candidate by admin:", error);
+//     res.status(500).send("Server Error");
+//   }
+// };
+
 exports.getCandidateByAdmin = async (req, res) => {
   try {
     const candidateId = req.params.id;
 
-    // Load candidate details
-    const candidate = await Candidate.findById(candidateId);
+    const candidate = await Candidate.findById(candidateId)
+      .populate({
+        path: "verifiedBy",
+        select: "email role", // Only select available fields
+      })
+      .lean();
 
     if (!candidate) {
       return res.status(404).send("Candidate not found");
     }
 
-    // Find the associated user (if needed, depends on schema)
-    const user = await User.findOne({ candidate: candidateId });
-
     res.render("candidates/candidateByAdmin", {
-      user: {
-        email: user?.email || "Not Available",
-        candidate,
-      },
+      candidate,
+      isVerified: candidate.verified && candidate.verifiedBy,
+      verifier: candidate.verifiedBy, // Pass the entire verifier object
     });
   } catch (error) {
-    console.error("Error loading candidate by admin:", error);
+    console.error("Error loading candidate:", error);
     res.status(500).send("Server Error");
   }
 };

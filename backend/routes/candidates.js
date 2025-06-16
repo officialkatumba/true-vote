@@ -117,6 +117,37 @@ router.post(
 
 // POST /candidates/:id/verify
 
+// router.post("/:id/verify", async (req, res) => {
+//   try {
+//     const candidate = await Candidate.findById(req.params.id);
+
+//     if (!candidate) {
+//       req.flash("error", "Candidate not found.");
+//       return res.redirect("/candidates");
+//     }
+
+//     if (req.user.role !== "system_admin") {
+//       req.flash("error", "You are not authorized to perform this action.");
+//       return res.redirect(`/candidates/${req.params.id}`);
+//     }
+
+//     if (candidate.verified) {
+//       req.flash("error", "Candidate identity is already verified.");
+//       return res.redirect(`/candidates/${candidate._id}`);
+//     }
+
+//     candidate.verified = true;
+//     await candidate.save();
+
+//     req.flash("success", "Candidate identity verified.");
+//     res.redirect(`/candidates/${candidate._id}`);
+//   } catch (error) {
+//     console.error("Verification error:", error);
+//     req.flash("error", "Failed to verify candidate.");
+//     res.redirect(`/candidates/${req.params.id}`);
+//   }
+// });
+
 router.post("/:id/verify", async (req, res) => {
   try {
     const candidate = await Candidate.findById(req.params.id);
@@ -137,6 +168,7 @@ router.post("/:id/verify", async (req, res) => {
     }
 
     candidate.verified = true;
+    candidate.verifiedBy = req.user._id; // ✅ Track the verifying system-admin
     await candidate.save();
 
     req.flash("success", "Candidate identity verified.");

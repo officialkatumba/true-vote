@@ -24,7 +24,6 @@
 
       <!-- Welcome Message -->
       <h1 class="welcome-heading"><%= candidate.name || user.email %></h1>
-
       <!-- Candidate Info Card -->
       <div class="detail-card mt-4 shadow fancy-detail">
         <div class="detail-row">
@@ -95,6 +94,15 @@
             else { %> Not set <% } %>
           </div>
         </div>
+
+        <% if (candidate.verified && candidate.verifiedBy) { %>
+        <div class="detail-row">
+          <div class="detail-label">
+            <i class="fas fa-user-shield me-2"></i> Verified By:
+          </div>
+          <div class="detail-value"><%= candidate.verifiedBy.email %></div>
+        </div>
+        <% } %>
       </div>
 
       <!-- Dashboard Actions -->
