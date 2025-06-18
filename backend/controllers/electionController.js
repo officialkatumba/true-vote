@@ -651,10 +651,18 @@ exports.launchElection = async (req, res) => {
     }
 
     // Check if already launched or not in draft mode
+    // if (election.electionStatus !== "draft") {
+    //   return res.status(400).render("error", {
+    //     errorMessage: "Only elections in draft mode can be launched",
+    //   });
+    // }
+
     if (election.electionStatus !== "draft") {
-      return res.status(400).render("error", {
-        errorMessage: "Only elections in draft mode can be launched",
-      });
+      req.flash(
+        "error",
+        "This election has already been launched or is not in draft mode."
+      );
+      return res.redirect("/elections/my-elections");
     }
 
     // Launch the election

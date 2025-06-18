@@ -15,7 +15,7 @@ const candidateValidationSchema = Joi.object({
 
   // Candidate-related fields
   name: Joi.string().required().label("Candidate Name"),
-  bio: Joi.string().required().label("Biography"),
+  bio: Joi.string().required(),
   mobile: Joi.string().required().label("Mobile Number"),
   party: Joi.string().default("Independent"),
   profileImage: Joi.string().uri().optional(),

@@ -212,6 +212,8 @@ Your task is to synthesize them into **one cohesive, 4-page strategic report**. 
 
 And do not mention any batches as we want  a clear and unified document.
 
+Clearly identify the demographic groups most likely to support or oppose the candidate, and suggest actionable strategies the candidate can use to increase their chances of winning the 2026 elections in ${election.willRunIn}.
+
 Election Context:
 ${electionContextText}
 
@@ -596,6 +598,8 @@ Your job: Summarize into ONE cohesive, professional report (~4 pages). Eliminate
 
 And do not mention any batches as we want  a clear and unified document.
 
+Based on voter data from the election in ${election.willRunIn}, clearly identify the education backgrounds most likely to support or oppose the candidate. Explain what the candidate can do to improve their chances of winning the 2026 elections, taking into account local education-related trends and concerns.
+
 Election Context:
 ${electionContextText}
 
@@ -958,6 +962,8 @@ Please summarize them into a **single unified 4-page strategic report** on the *
 
 And do not mention any batches as we want  a clear and unified document.
 
+Based on voter data from the election in ${election.willRunIn}, identify the living conditions or housing situations that most influence support or rejection of the candidate, and recommend how the candidate can address these realities to improve their chances of winning the 2026 elections
+
 Election Context:
 ${electionContextText}
 
@@ -1311,6 +1317,8 @@ You are a senior political strategist. Below are several AI-generated insights o
 Unify them into one powerful, 4-page strategy document.
 
 And do not mention any batches as we want  a clear and unified document.
+
+Considering the economic conditions in ${election.willRunIn}, analyze which economic factors drive voter support or opposition for the candidate, and suggest practical strategies the candidate can adopt to improve their chances of winning the 2026 elections
 
 
 Election Context:
@@ -1668,6 +1676,8 @@ Unify them into a professional, polished, 4-page insight report for candidate **
 
 And do not mention any batches as we want  a clear and unified document.
 
+Based on the political landscape and voter priorities in ${election.willRunIn}, analyze which policies resonate most with supporters and which cause opposition, and recommend how the candidate can refine their policy platform to boost their chances of winning the 2026 elections.
+
 Context:
 ${electionContextText}
 
@@ -2021,6 +2031,8 @@ Be specific with messaging advice, tone adjustments, and public engagement strat
 
 And do not mention any batches as we want  a clear and unified document.
 
+Analyze the overall voter sentiment in ${election.willRunIn}, highlighting the key feelings and opinions that influence support or opposition for the candidate, and suggest how the candidate can positively shape public perception to improve their chances in the 2026 elections.
+
 Context:
 ${electionContextText}
 
@@ -2147,6 +2159,8 @@ You are an AI election strategist. Summarize the following AI insight sections i
 
 Give a top-level overview, strategic interpretation, and campaign recommendations, ideally in 800–1200 words.
 
+Provide a consolidated analysis of voter demographics, education, living conditions, economic factors, policy preferences, and sentiment in ${election.willRunIn}, highlighting key drivers of support and opposition, and recommend strategic actions the candidate can take to maximize their chances of winning the 2026 elections.
+
 --- CONTENT START ---
 
 ${combinedContent}
@@ -2254,7 +2268,9 @@ Rejected Votes: ${stats.totalRejected}
 
 Existing Insights: ${JSON.stringify(ai, null, 2)}
 
-Based on this, estimate the candidate's probability of victory (as a percentage), and provide strategic recommendations to improve the chances of winning.
+Based on this, estimate the candidate's probability of victory (as a percentage), and provide strategic recommendations to improve the chances of winning.Assess the probability of the candidate winning the 2026 elections in ${
+      election.willRunIn
+    } based on current voter demographics, past election results, and key influencing factors, and suggest critical steps to improve their chances of victory.
 `;
 
     const completion = await openai.chat.completions.create({
