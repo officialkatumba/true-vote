@@ -318,186 +318,6 @@ ${cleanedCombinedInsights}
 
 // // Genrate eduction insight
 
-// exports.generateEducationalInsight = async (req, res) => {
-//   try {
-//     const { id: electionId } = req.params;
-//     const candidateId = req.user.candidate._id.toString();
-
-//     // 1. Fetch and validate election
-//     const election = await Election.findById(electionId);
-//     if (!election) return res.status(404).send("Election not found");
-
-//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-//     if (!isCandidate) return res.status(403).send("Access denied");
-
-//     const candidate = await Candidate.findById(candidateId);
-//     if (!candidate || candidate.membershipStatus !== "active") {
-//       return res
-//         .status(403)
-//         .send("Pay to Get this Insight: Your membership is not active.");
-//     }
-
-//     // 2. Fetch votes and rejections
-//     const votes = await Vote.find({
-//       election: electionId,
-//       candidate: candidateId,
-//     });
-
-//     let rejections = [];
-//     try {
-//       rejections = await Rejection.find({ election: electionId });
-//     } catch (err) {
-//       console.warn("No rejections found or failed to fetch:", err.message);
-//     }
-
-//     // 3. Prepare educational data
-//     const educationFields = [
-//       "highestEducation",
-//       "provinceOfStudy",
-//       "schoolCompletionLocation",
-//     ];
-//     const extractedVotes = votes.map((vote) =>
-//       educationFields.reduce((acc, field) => {
-//         acc[field] = vote[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-//     const extractedRejections = rejections.map((rej) =>
-//       educationFields.reduce((acc, field) => {
-//         acc[field] = rej[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     // 4. Generate AI analysis
-//     // const candidate = await Candidate.findById(candidateId); // Ensure valid candidate fetch
-//     const electionContextText = election.electionContext || "";
-
-//     const prompt = `
-// You are a professional election strategist with a specialization in educational and sociopolitical analysis. You have access to internal voter and rejection data, as well as campaign-submitted context for the candidate **${
-//       candidate.name
-//     }**.
-
-// Your task is to write a rich, strategic analysis (target 500–1000 words) on the **Educational Journey** of the electorate in this election. Your analysis should synthesize both internal and external perspectives to provide high-value insights.
-
-// Use the internal data provided below to identify key patterns, including:
-
-// - The highest level of education attained among voters and non-voters
-// - Geographic trends in where individuals completed their schooling (e.g., province or region of study)
-// - Differences in educational pathways between voters and rejections
-// - Notable links between educational background and likely voter behavior
-// - Any patterns by constituency or demographic clusters
-
-// Incorporate this campaign context provided by the candidate:
-// "${electionContextText}"
-
-// ❗ Additionally, **enrich your analysis with publicly available or contextual insights** where relevant. This may include:
-// - Regional disparities in educational access or literacy rates
-// - Trends in migration for education (e.g., rural students moving to urban areas)
-// - Known educational infrastructure issues in certain districts
-// - General socio-political attitudes among different education levels in the region
-
-// These external elements should complement the internal data to give a full-picture understanding of how education might influence political engagement, preferences, and strategic outreach.
-
-// Voter Records:
-// ${JSON.stringify(extractedVotes, null, 2)}
-
-// Rejection Records:
-// ${JSON.stringify(extractedRejections, null, 2)}
-
-// Write in a clear, objective, and analytical tone. Prioritize synthesis and actionable takeaways. Include concrete strategic recommendations that the candidate can use to tailor messaging, outreach, or policy focus.
-// `;
-
-//     const completion = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [{ role: "user", content: prompt }],
-//       temperature: 0.7,
-//       max_tokens: 1000,
-//     });
-
-//     const aiContent = completion.choices[0].message.content.trim();
-
-//     // 5. Store insights in election document
-//     if (!election.aiInsights.has(candidateId)) {
-//       election.aiInsights.set(candidateId, {});
-//     }
-
-//     const candidateInsights = election.aiInsights.get(candidateId);
-//     candidateInsights["Educational Journey"] = {
-//       content: aiContent,
-//       pdfUploaded: false,
-//     };
-//     election.aiInsights.set(candidateId, candidateInsights);
-//     await election.save();
-
-//     // 6. Generate and upload PDF
-//     const fileName = `education_${electionId}_${candidateId}.pdf`;
-//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-//     const storagePath = `allinsights/${fileName}`;
-
-//     if (!fs.existsSync(path.dirname(localPath))) {
-//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
-//     }
-
-//     try {
-//       await generateInsightPDF({
-//         sectionTitle: "Educational Journey",
-//         content: aiContent,
-//         filePath: localPath,
-//         electionDetails: {
-//           type: election.type,
-//           electionNumber: election.electionNumber,
-//           startDate: election.endDate,
-//         },
-//       });
-
-//       const [bucketExists] = await bucket.exists();
-//       if (!bucketExists)
-//         throw new Error("Bucket does not exist or no access permissions");
-
-//       await bucket.upload(localPath, {
-//         destination: storagePath,
-//         gzip: true,
-//         metadata: {
-//           cacheControl: "public, max-age=31536000",
-//         },
-//       });
-
-//       const updatedCandidateInsights = election.aiInsights.get(candidateId);
-//       updatedCandidateInsights["Educational Journey"].pdfUploaded = true;
-//       election.aiInsights.set(candidateId, updatedCandidateInsights);
-//       await election.save();
-
-//       console.log(`PDF successfully uploaded to ${storagePath}`);
-//     } catch (uploadError) {
-//       console.error("PDF processing failed:", {
-//         error: uploadError.message,
-//         stack: uploadError.stack,
-//       });
-
-//       const updatedCandidateInsights = election.aiInsights.get(candidateId);
-//       updatedCandidateInsights["Educational Journey"].pdfUploaded = false;
-//       election.aiInsights.set(candidateId, updatedCandidateInsights);
-//       await election.save();
-//     }
-
-//     // 7. Clean up local file
-//     if (fs.existsSync(localPath)) {
-//       fs.unlink(localPath, (err) => {
-//         if (err) console.warn("Failed to delete local PDF:", err);
-//       });
-//     }
-
-//     res.redirect(`/api/insights/${electionId}/report`);
-//   } catch (err) {
-//     console.error("Error in generateEducationalInsight:", {
-//       message: err.message,
-//       stack: err.stack,
-//     });
-//     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
-//   }
-// };
-
 exports.generateEducationalInsight = async (req, res) => {
   try {
     const { id: electionId } = req.params;
@@ -685,178 +505,7 @@ ${cleanedCombinedInsights}
   }
 };
 
-// exports.generateLivingInsight = async (req, res) => {
-//   try {
-//     const { id: electionId } = req.params;
-//     const candidateId = req.user.candidate._id.toString();
-
-//     const election = await Election.findById(electionId);
-//     if (!election) return res.status(404).send("Election not found");
-
-//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-//     if (!isCandidate) return res.status(403).send("Access denied");
-
-//     const candidate = await Candidate.findById(candidateId);
-//     const electionContextText = election.electionContext || "";
-
-//     // const candidate = await Candidate.findById(candidateId);
-//     if (!candidate || candidate.membershipStatus !== "active") {
-//       return res
-//         .status(403)
-//         .send("Pay to Get this Insight: Your membership is not active.");
-//     }
-
-//     const votes = await Vote.find({
-//       election: electionId,
-//       candidate: candidateId,
-//     });
-
-//     let rejections = [];
-//     try {
-//       rejections = await Rejection.find({ election: electionId });
-//     } catch (err) {
-//       console.warn(
-//         "No rejections found or failed to fetch rejections:",
-//         err.message
-//       );
-//     }
-
-//     const livingFields = [
-//       "dwellingType",
-//       "familyDwellingType",
-//       "religiousStatus",
-//       "votingEligibility2026",
-//     ];
-
-//     const extractedVotes = votes.map((vote) =>
-//       livingFields.reduce((acc, field) => {
-//         acc[field] = vote[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     const extractedRejections = rejections.map((rej) =>
-//       livingFields.reduce((acc, field) => {
-//         acc[field] = rej[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     const prompt = `
-// You are a professional election analyst with access to internal voter data, rejection data, and candidate-submitted campaign context.
-
-// Your task is to write a comprehensive, strategic analysis (target 500–1000 words) about the **Living Context** of voters and non-voters for the candidate **${
-//       candidate.name
-//     }**.
-
-// Use the internal data provided below to identify and interpret patterns related to:
-
-// - Dwelling types (urban vs rural patterns)
-// - Family dwelling structures and their implications
-// - District and constituency-level breakdowns
-// - Differences between voters and non-voters (rejections)
-// - How these living conditions may influence political behavior and election outcomes
-
-// Also, incorporate this campaign-specific context submitted by the candidate:
-// "${electionContextText}"
-
-// ❗ Additionally, where appropriate, **augment your analysis with relevant publicly available or external knowledge** about the region, such as:
-// - Urbanization rates or housing development challenges
-// - Regional differences in living standards or infrastructure
-// - Known socio-economic issues affecting specific districts or constituencies
-// - Migration patterns, overcrowding, or rural-urban divides
-
-// These external insights should help you contextualize internal patterns more deeply and provide richer strategic recommendations.
-
-// Voter Records:
-// ${JSON.stringify(extractedVotes, null, 2)}
-
-// Rejection Records:
-// ${JSON.stringify(extractedRejections, null, 2)}
-
-// Write in a professional tone. Focus on uncovering strategic findings, synthesizing key themes, and giving the candidate **actionable advice** based on both data and context. Avoid repetition and summarize trends clearly.
-// `;
-
-//     const completion = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [{ role: "user", content: prompt }],
-//       temperature: 0.7,
-//       max_tokens: 1500,
-//     });
-
-//     const aiContent = completion.choices[0].message.content.trim();
-
-//     if (!election.aiInsights.has(candidateId)) {
-//       election.aiInsights.set(candidateId, {});
-//     }
-
-//     const candidateInsights = election.aiInsights.get(candidateId);
-//     candidateInsights["Living Context"] = {
-//       content: aiContent,
-//       pdfUploaded: false,
-//     };
-//     election.aiInsights.set(candidateId, candidateInsights);
-//     await election.save();
-
-//     const fileName = `living_${electionId}_${candidateId}.pdf`;
-//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-//     const storagePath = `allinsights/${fileName}`;
-
-//     if (!fs.existsSync(path.dirname(localPath))) {
-//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
-//     }
-
-//     try {
-//       await generateInsightPDF({
-//         sectionTitle: "Living Context",
-//         content: aiContent,
-//         filePath: localPath,
-//         electionDetails: {
-//           type: election.type,
-//           electionNumber: election.electionNumber,
-//           startDate: election.endDate,
-//         },
-//       });
-
-//       const [bucketExists] = await bucket.exists();
-//       if (!bucketExists)
-//         throw new Error("Bucket does not exist or access denied");
-
-//       await bucket.upload(localPath, {
-//         destination: storagePath,
-//         gzip: true,
-//         metadata: {
-//           cacheControl: "public, max-age=31536000",
-//         },
-//       });
-
-//       const updatedCandidateInsights = election.aiInsights.get(candidateId);
-//       updatedCandidateInsights["Living Context"].pdfUploaded = true;
-//       election.aiInsights.set(candidateId, updatedCandidateInsights);
-//       await election.save();
-
-//       console.log(`Living Context PDF uploaded: ${storagePath}`);
-//     } catch (uploadErr) {
-//       console.error("PDF Upload or Generation Error:", uploadErr.message);
-
-//       const updatedCandidateInsights = election.aiInsights.get(candidateId);
-//       updatedCandidateInsights["Living Context"].pdfUploaded = false;
-//       election.aiInsights.set(candidateId, updatedCandidateInsights);
-//       await election.save();
-//     }
-
-//     if (fs.existsSync(localPath)) {
-//       fs.unlink(localPath, (err) => {
-//         if (err) console.warn("Failed to delete local PDF:", err);
-//       });
-//     }
-
-//     res.redirect(`/api/insights/${electionId}/report`);
-//   } catch (err) {
-//     console.error("Error generating living insight:", err);
-//     res.redirect(`/api/insights/${req.params.id}/report`);
-//   }
-// };
+// General living conditiona or location
 
 exports.generateLivingInsight = async (req, res) => {
   try {
@@ -1052,175 +701,7 @@ ${cleanedCombinedInsights}
   }
 };
 
-// exports.generateEconomicInsight = async (req, res) => {
-//   try {
-//     const { id: electionId } = req.params;
-//     const candidateId = req.user.candidate._id.toString();
-
-//     const election = await Election.findById(electionId);
-//     if (!election) return res.status(404).send("Election not found");
-
-//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-//     if (!isCandidate) return res.status(403).send("Access denied");
-
-//     const candidate = await Candidate.findById(candidateId);
-
-//     // const candidate = await Candidate.findById(candidateId);
-//     if (!candidate || candidate.membershipStatus !== "active") {
-//       return res
-//         .status(403)
-//         .send("Pay to Get this Insight: Your membership is not active.");
-//     }
-
-//     const votes = await Vote.find({
-//       election: electionId,
-//       candidate: candidateId,
-//     });
-
-//     let rejections = [];
-//     try {
-//       rejections = await Rejection.find({ election: electionId });
-//     } catch (err) {
-//       console.warn("No rejections found or failed to fetch:", err.message);
-//     }
-
-//     const economicFields = [
-//       "incomeLevel",
-//       "employmentStatus",
-//       "sectorOfOperation",
-//     ];
-//     const extractedVotes = votes.map((vote) =>
-//       economicFields.reduce((acc, field) => {
-//         acc[field] = vote[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-//     const extractedRejections = rejections.map((rej) =>
-//       economicFields.reduce((acc, field) => {
-//         acc[field] = rej[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     const electionContextText = election.electionContext?.[candidateId] || "";
-
-//     const prompt = `
-// You are a senior political economist analyzing voter behavior in the context of economic indicators. You have access to internal election data, including votes and rejections for the candidate **${
-//       candidate.name
-//     }**.
-
-// Your task is to write a thorough, strategic analysis (target: 500–1000 words) of the **Economic Factors** influencing voter behavior in this election. Focus on patterns and contrasts related to:
-
-// - Average monthly rent
-// - Employment status
-// - Sector of operation (e.g., marketeer, small business, farming, formal employment, etc.)
-
-// Analyze key differences between voters and non-voters (rejections), and explore how economic precarity, employment trends, or sector-specific challenges may be influencing political preferences or rejection behavior.
-
-// Incorporate strategic insights that the candidate can act on for better campaign targeting and messaging.
-
-// Also, include commentary based on the following campaign context submitted by the candidate:
-// "${electionContextText}"
-
-// Furthermore, enrich your analysis with publicly available or contextual insights relevant to the region. This may include:
-
-// - Current inflation rates and their impact on the cost of living
-// - Employment trends and unemployment rates
-// - Economic growth projections and sectoral performance
-// - Regional disparities in economic development
-// - Any recent economic reforms or policy changes
-
-// Voter Records:
-// ${JSON.stringify(extractedVotes, null, 2)}
-
-// Rejection Records:
-// ${JSON.stringify(extractedRejections, null, 2)}
-
-// Write in a professional, analytical tone. Your output should synthesize trends, highlight strategic takeaways, and provide clear recommendations to the candidate for policy positioning or voter outreach.
-// `;
-
-//     const completion = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [{ role: "user", content: prompt }],
-//       temperature: 0.7,
-//       max_tokens: 1500,
-//     });
-
-//     const aiContent = completion.choices[0].message.content.trim();
-
-//     if (!election.aiInsights.has(candidateId)) {
-//       election.aiInsights.set(candidateId, {});
-//     }
-
-//     const candidateInsights = election.aiInsights.get(candidateId);
-//     candidateInsights["Economic Factors"] = {
-//       content: aiContent,
-//       pdfUploaded: false,
-//     };
-//     election.aiInsights.set(candidateId, candidateInsights);
-//     await election.save();
-
-//     const fileName = `economy_${electionId}_${candidateId}.pdf`;
-//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-//     const storagePath = `allinsights/${fileName}`;
-
-//     if (!fs.existsSync(path.dirname(localPath))) {
-//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
-//     }
-
-//     try {
-//       await generateInsightPDF({
-//         sectionTitle: "Economic Factors",
-//         content: aiContent,
-//         filePath: localPath,
-//         electionDetails: {
-//           type: election.type,
-//           electionNumber: election.electionNumber,
-//           startDate: election.endDate,
-//         },
-//       });
-
-//       const [bucketExists] = await bucket.exists();
-//       if (!bucketExists)
-//         throw new Error("Bucket does not exist or no access permissions");
-
-//       await bucket.upload(localPath, {
-//         destination: storagePath,
-//         gzip: true,
-//         metadata: {
-//           cacheControl: "public, max-age=31536000",
-//         },
-//       });
-
-//       const updatedInsights = election.aiInsights.get(candidateId);
-//       updatedInsights["Economic Factors"].pdfUploaded = true;
-//       election.aiInsights.set(candidateId, updatedInsights);
-//       await election.save();
-
-//       console.log(`PDF uploaded: ${storagePath}`);
-//     } catch (uploadError) {
-//       console.error("PDF upload failed:", uploadError.message);
-//       const updatedInsights = election.aiInsights.get(candidateId);
-//       updatedInsights["Economic Factors"].pdfUploaded = false;
-//       election.aiInsights.set(candidateId, updatedInsights);
-//       await election.save();
-//     }
-
-//     if (fs.existsSync(localPath)) {
-//       fs.unlink(localPath, (err) => {
-//         if (err) console.warn("Failed to delete PDF:", err);
-//       });
-//     }
-
-//     res.redirect(`/api/insights/${electionId}/report`);
-//   } catch (err) {
-//     console.error("Error in generateEconomicInsight:", {
-//       message: err.message,
-//       stack: err.stack,
-//     });
-//     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
-//   }
-// };
+// Economic insight
 
 exports.generateEconomicInsight = async (req, res) => {
   try {
@@ -1412,177 +893,7 @@ ${cleanedCombinedInsights}
     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
   }
 };
-
-// exports.generatePolicyInsight = async (req, res) => {
-//   try {
-//     const { id: electionId } = req.params;
-//     const candidateId = req.user.candidate._id.toString();
-
-//     const election = await Election.findById(electionId);
-//     if (!election) return res.status(404).send("Election not found");
-
-//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-//     if (!isCandidate) return res.status(403).send("Access denied");
-
-//     const candidate = await Candidate.findById(candidateId);
-//     if (!candidate || candidate.membershipStatus !== "active") {
-//       return res
-//         .status(403)
-//         .send("Pay to Get this Insight: Your membership is not active.");
-//     }
-
-//     const votes = await Vote.find({
-//       election: electionId,
-//       candidate: candidateId,
-//     });
-
-//     let rejections = [];
-//     try {
-//       rejections = await Rejection.find({ election: electionId });
-//     } catch (err) {
-//       console.warn("No rejections found or failed to fetch:", err.message);
-//     }
-
-//     const policyFields = [
-//       "familiarWithPolicies",
-//       "policyUnderstanding",
-//       "usualPartySupport",
-//     ];
-
-//     const extractedVotes = votes.map((vote) =>
-//       policyFields.reduce((acc, field) => {
-//         acc[field] = vote[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     const extractedRejections = rejections.map((rej) =>
-//       policyFields.reduce((acc, field) => {
-//         acc[field] = rej[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     // const candidate = req.user.candidate;
-//     const electionContextText =
-//       election.context ?? "No campaign context provided.";
-
-//     const prompt = `
-// You are a political analyst and messaging strategist helping a candidate understand their voter base.
-
-// Your task is to write a 500–1000 word strategic insight report on **Policy Awareness & Political Behavior** for candidate **${
-//       candidate.name
-//     }** in the current election.
-
-// Use both internal data and relevant external context. The data includes:
-
-// - How familiar voters are with the candidate's policies
-// - Their level of understanding of those policies
-// - Their usual party support behavior
-
-// Also include patterns among rejection data (non-supporters) and incorporate political context from the candidate’s notes and publicly available political discourse.
-
-// Provide actionable recommendations on:
-
-// - Clarifying or improving messaging of key policies
-// - Aligning or contrasting with broader public concerns
-// - Outreach tactics based on gaps in awareness or understanding
-
-// Election Context (candidate-submitted notes):
-// ${electionContextText}
-
-// Voter Records:
-// ${JSON.stringify(extractedVotes, null, 2)}
-
-// Rejection Records:
-// ${JSON.stringify(extractedRejections, null, 2)}
-
-// Keep the tone professional, analytical, and campaign-ready.
-//     `;
-
-//     const completion = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [{ role: "user", content: prompt }],
-//       temperature: 0.7,
-//       max_tokens: 2000,
-//     });
-
-//     const aiContent = completion.choices[0].message.content.trim();
-
-//     if (!election.aiInsights.has(candidateId)) {
-//       election.aiInsights.set(candidateId, {});
-//     }
-
-//     const candidateInsights = election.aiInsights.get(candidateId);
-//     candidateInsights["Policy Awareness & Political Behavior"] = {
-//       content: aiContent,
-//       pdfUploaded: false,
-//     };
-//     election.aiInsights.set(candidateId, candidateInsights);
-//     await election.save();
-
-//     const fileName = `policy_${electionId}_${candidateId}.pdf`;
-//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-//     const storagePath = `allinsights/${fileName}`;
-
-//     if (!fs.existsSync(path.dirname(localPath))) {
-//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
-//     }
-
-//     try {
-//       await generateInsightPDF({
-//         sectionTitle: "Policy Awareness & Political Behavior",
-//         content: aiContent,
-//         filePath: localPath,
-//         electionDetails: {
-//           type: election.type,
-//           electionNumber: election.electionNumber,
-//           startDate: election.endDate,
-//         },
-//       });
-
-//       const [bucketExists] = await bucket.exists();
-//       if (!bucketExists) throw new Error("Bucket does not exist or no access");
-
-//       await bucket.upload(localPath, {
-//         destination: storagePath,
-//         gzip: true,
-//         metadata: { cacheControl: "public, max-age=31536000" },
-//       });
-
-//       const updatedInsights = election.aiInsights.get(candidateId);
-//       updatedInsights[
-//         "Policy Awareness & Political Behavior"
-//       ].pdfUploaded = true;
-//       election.aiInsights.set(candidateId, updatedInsights);
-//       await election.save();
-
-//       console.log(`PDF uploaded: ${storagePath}`);
-//     } catch (uploadError) {
-//       console.error("PDF upload failed:", uploadError.message);
-//       const updatedInsights = election.aiInsights.get(candidateId);
-//       updatedInsights[
-//         "Policy Awareness & Political Behavior"
-//       ].pdfUploaded = false;
-//       election.aiInsights.set(candidateId, updatedInsights);
-//       await election.save();
-//     }
-
-//     if (fs.existsSync(localPath)) {
-//       fs.unlink(localPath, (err) => {
-//         if (err) console.warn("Failed to delete local PDF:", err);
-//       });
-//     }
-
-//     res.redirect(`/api/insights/${electionId}/report`);
-//   } catch (err) {
-//     console.error("Error in generatePolicyInsight:", {
-//       message: err.message,
-//       stack: err.stack,
-//     });
-//     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
-//   }
-// };
+// Policy awareness insight
 
 exports.generatePolicyInsight = async (req, res) => {
   try {
@@ -1760,178 +1071,7 @@ ${cleanedCombinedInsights}
   }
 };
 
-// exports.generateSentimentInsight = async (req, res) => {
-//   try {
-//     const { id: electionId } = req.params;
-//     const candidateId = req.user.candidate._id.toString();
-
-//     const election = await Election.findById(electionId);
-//     if (!election) return res.status(404).send("Election not found");
-
-//     const isCandidate = election.candidates.some((c) => c.equals(candidateId));
-//     if (!isCandidate) return res.status(403).send("Access denied");
-
-//     const candidate = await Candidate.findById(candidateId);
-//     if (!candidate || candidate.membershipStatus !== "active") {
-//       return res
-//         .status(403)
-//         .send("Pay to Get this Insight: Your membership is not active.");
-//     }
-
-//     const votes = await Vote.find({
-//       election: electionId,
-//       candidate: candidateId,
-//     });
-
-//     let rejections = [];
-//     try {
-//       rejections = await Rejection.find({ election: electionId });
-//     } catch (err) {
-//       console.warn("No rejections found or failed to fetch:", err.message);
-//     }
-
-//     const sentimentFields = [
-//       "relativeVoteLikelihood",
-//       "expectationsFromCandidate",
-//       "reasonForVoting",
-//       "reasonForRelativeVote",
-//     ];
-//     const extractedVotes = votes.map((vote) =>
-//       sentimentFields.reduce((acc, field) => {
-//         acc[field] = vote[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-//     const extractedRejections = rejections.map((rej) =>
-//       sentimentFields.reduce((acc, field) => {
-//         acc[field] = rej[field] ?? null;
-//         return acc;
-//       }, {})
-//     );
-
-//     // const candidate = await Candidate.findById(candidateId); // ✅ Safely fetch candidate
-//     const electionContextText = election.electionContext || "";
-
-//     // const candidate = req.user.candidate;
-//     // const electionContextText =
-//     //   election.context ?? "No campaign context provided.";
-
-//     const prompt = `
-// You are a political psychologist and messaging strategist with deep experience in campaign voter sentiment analysis.
-
-// Your task is to write a 500–1000 word strategic insight on **Voter Sentiment & Expectations** for candidate **${
-//       candidate.name
-//     }** in the current election.
-
-// Use both internal data and relevant contextual thinking. The data includes:
-
-// - Voter feedback on what they dislike about the candidate
-// - What they expect from the candidate
-// - Their stated reasons for voting
-
-// Also include patterns among rejection data (non-supporters), and relate findings to possible communication gaps, unmet expectations, or value misalignment.
-
-// Provide actionable recommendations for:
-
-// - Messaging improvements
-// - Potential tone and language adjustments
-// - Targeted outreach ideas based on concerns and hopes
-
-// Election Context (candidate-submitted notes):
-// ${electionContextText}
-
-// Voter Records:
-// ${JSON.stringify(extractedVotes, null, 2)}
-
-// Rejection Records:
-// ${JSON.stringify(extractedRejections, null, 2)}
-
-// Write clearly, strategically, and focus on real-world campaign action.
-//     `;
-
-//     const completion = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [{ role: "user", content: prompt }],
-//       temperature: 0.7,
-//       max_tokens: 2000,
-//     });
-
-//     const aiContent = completion.choices[0].message.content.trim();
-
-//     if (!election.aiInsights.has(candidateId)) {
-//       election.aiInsights.set(candidateId, {});
-//     }
-
-//     const candidateInsights = election.aiInsights.get(candidateId);
-//     candidateInsights["Sentiment & Expectations"] = {
-//       content: aiContent,
-//       pdfUploaded: false,
-//     };
-//     election.aiInsights.set(candidateId, candidateInsights);
-//     await election.save();
-
-//     const fileName = `sentiments_${electionId}_${candidateId}.pdf`;
-//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-//     const storagePath = `allinsights/${fileName}`;
-
-//     if (!fs.existsSync(path.dirname(localPath))) {
-//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
-//     }
-
-//     try {
-//       await generateInsightPDF({
-//         sectionTitle: "Sentiment & Expectations",
-//         content: aiContent,
-//         filePath: localPath,
-//         electionDetails: {
-//           type: election.type,
-//           electionNumber: election.electionNumber,
-//           startDate: election.endDate,
-//         },
-//       });
-
-//       const [bucketExists] = await bucket.exists();
-//       if (!bucketExists) {
-//         throw new Error("Bucket does not exist or no access permissions");
-//       }
-
-//       await bucket.upload(localPath, {
-//         destination: storagePath,
-//         gzip: true,
-//         metadata: {
-//           cacheControl: "public, max-age=31536000",
-//         },
-//       });
-
-//       const updatedInsights = election.aiInsights.get(candidateId);
-//       updatedInsights["Sentiment & Expectations"].pdfUploaded = true;
-//       election.aiInsights.set(candidateId, updatedInsights);
-//       await election.save();
-
-//       console.log(`PDF uploaded: ${storagePath}`);
-//     } catch (uploadError) {
-//       console.error("PDF upload failed:", uploadError.message);
-//       const updatedInsights = election.aiInsights.get(candidateId);
-//       updatedInsights["Sentiment & Expectations"].pdfUploaded = false;
-//       election.aiInsights.set(candidateId, updatedInsights);
-//       await election.save();
-//     }
-
-//     if (fs.existsSync(localPath)) {
-//       fs.unlink(localPath, (err) => {
-//         if (err) console.warn("Failed to delete PDF:", err);
-//       });
-//     }
-
-//     res.redirect(`/api/insights/${electionId}/report`);
-//   } catch (err) {
-//     console.error("Error in generateSentimentInsight:", {
-//       message: err.message,
-//       stack: err.stack,
-//     });
-//     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
-//   }
-// };
+// Sentiments insights
 
 exports.generateSentimentInsight = async (req, res) => {
   try {
@@ -2367,5 +1507,178 @@ exports.viewInsightPdf = async (req, res) => {
   } catch (err) {
     console.error("Error generating signed URL:", err);
     res.status(500).send("Failed to generate access to the PDF.");
+  }
+};
+
+exports.generateReligiousInsight = async (req, res) => {
+  try {
+    const { id: electionId } = req.params;
+    const candidateId = req.user.candidate._id.toString();
+
+    const election = await Election.findById(electionId);
+    if (!election) return res.status(404).send("Election not found");
+
+    const isCandidate = election.candidates.some((c) => c.equals(candidateId));
+    if (!isCandidate) return res.status(403).send("Access denied");
+
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
+
+    const electionContextText = election.electionContext || "";
+
+    const votes = await Vote.find({
+      election: electionId,
+      candidate: candidateId,
+    });
+    const rejections = await Rejection.find({ election: electionId });
+
+    const extractedVotes = votes.map((vote) => ({
+      religiousStatus: vote.religiousStatus || null,
+    }));
+    const extractedRejections = rejections.map((rej) => ({
+      religiousStatus: rej.religiousStatus || null,
+    }));
+
+    const voteBatches = createBatches(extractedVotes, 50);
+    const rejectionBatches = createBatches(extractedRejections, 50);
+
+    let combinedInsights = "";
+
+    for (let i = 0; i < voteBatches.length; i++) {
+      const voteChunk = voteBatches[i];
+      const rejectionChunk = rejectionBatches[i] || [];
+
+      const prompt = `
+You are a political sociologist analyzing **Religious Affiliation Insight** for voters and non-voters (batch ${
+        i + 1
+      }) for candidate ${candidate.name}.
+
+Focus on:
+- Which religious groups support or reject this candidate
+- Behavior patterns in religious affiliations
+- Strategic implications of these trends
+
+Election Region: ${election.willRunIn}
+Election Context: ${electionContextText}
+
+Voter Records:
+${JSON.stringify(voteChunk, null, 2)}
+
+Rejection Records:
+${JSON.stringify(rejectionChunk, null, 2)}
+`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-16k",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      combinedInsights += `\n\n${completion.choices[0].message.content.trim()}`;
+    }
+
+    const cleanedCombinedInsights = combinedInsights
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+    const summaryPrompt = `
+You are a senior political strategist. Summarize the following batch-wise insights into a **unified Religious Affiliation Insight Report** for candidate ${candidate.name}.
+
+Do NOT mention batch numbers. Focus on:
+- Which religious groups align or conflict with the candidate
+- Patterns and implications
+- Strategic recommendations for 2026
+
+Election Region: ${election.willRunIn}
+Election Context: ${electionContextText}
+
+Insight Batches:
+${cleanedCombinedInsights}
+`;
+
+    const finalCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo-16k",
+      messages: [{ role: "user", content: summaryPrompt }],
+      temperature: 0.7,
+      max_tokens: 3000,
+    });
+
+    const aiContent = finalCompletion.choices[0].message.content.trim();
+
+    // Save to DB
+    if (!election.aiInsights.has(candidateId)) {
+      election.aiInsights.set(candidateId, {});
+    }
+    const candidateInsights = election.aiInsights.get(candidateId);
+    candidateInsights["Religious Affiliation Insight"] = {
+      content: aiContent,
+      pdfUploaded: false,
+    };
+    election.aiInsights.set(candidateId, candidateInsights);
+    await election.save();
+
+    // Generate PDF
+    const fileName = `religion_${electionId}_${candidateId}.pdf`;
+    const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+    const storagePath = `allinsights/${fileName}`;
+
+    if (!fs.existsSync(path.dirname(localPath))) {
+      fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    }
+
+    try {
+      await generateInsightPDF({
+        sectionTitle: "Religious Affiliation Insight",
+        content: aiContent,
+        filePath: localPath,
+        electionDetails: {
+          type: election.type,
+          electionNumber: election.electionNumber,
+          startDate: election.endDate,
+        },
+      });
+
+      const [bucketExists] = await bucket.exists();
+      if (!bucketExists) throw new Error("Bucket missing or no permissions");
+
+      await bucket.upload(localPath, {
+        destination: storagePath,
+        gzip: true,
+        metadata: { cacheControl: "public, max-age=31536000" },
+      });
+
+      const updatedCandidateInsights = election.aiInsights.get(candidateId);
+      updatedCandidateInsights[
+        "Religious Affiliation Insight"
+      ].pdfUploaded = true;
+      election.aiInsights.set(candidateId, updatedCandidateInsights);
+      await election.save();
+
+      console.log(`PDF uploaded: ${storagePath}`);
+    } catch (err) {
+      console.error("PDF upload failed:", err.message);
+      const updatedCandidateInsights = election.aiInsights.get(candidateId);
+      updatedCandidateInsights[
+        "Religious Affiliation Insight"
+      ].pdfUploaded = false;
+      election.aiInsights.set(candidateId, updatedCandidateInsights);
+      await election.save();
+    }
+
+    if (fs.existsSync(localPath)) {
+      fs.unlink(localPath, (err) => {
+        if (err) console.warn("PDF cleanup failed:", err);
+      });
+    }
+
+    res.redirect(`/api/insights/${electionId}/report`);
+  } catch (err) {
+    console.error("Error in generateReligiousInsight:", err);
+    res.status(500).redirect(`/api/insights/${req.params.id}/report`);
   }
 };

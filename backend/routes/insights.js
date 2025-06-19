@@ -5,6 +5,10 @@ const ensureAuthenticated = require("../middlewares/auth");
 
 const insightsController = require("../controllers/insightsController");
 
+const {
+  generateReligiousInsight,
+} = require("../controllers/insightsController");
+
 const { viewInsightPdf } = require("../controllers/insightsController");
 
 const {
@@ -72,6 +76,12 @@ router.post(
   "/:id/generate-probability",
   ensureAuthenticated,
   insightsController.generateVictoryProbability
+);
+
+router.post(
+  "/:id/generate-religion",
+  ensureAuthenticated,
+  generateReligiousInsight
 );
 
 module.exports = router;

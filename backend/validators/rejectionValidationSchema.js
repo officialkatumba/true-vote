@@ -41,8 +41,26 @@ const rejectionJoiSchema = Joi.object({
       "single dad"
     )
     .required(),
+  // religiousStatus: Joi.string()
+  //   .valid("not religious", "slightly religious", "very religious")
+  //   .required(),
+
   religiousStatus: Joi.string()
-    .valid("not religious", "slightly religious", "very religious")
+    .valid(
+      "Catholic",
+      "Anglican",
+      "United Church of Zambia (UCZ)",
+      "Methodist",
+      "Protestant (Mainline)",
+      "Pentecostal",
+      "Adventist",
+      "Jehovah’s Witness",
+      "Independent Christian",
+      "Not aligned Christian",
+      "Islamic",
+      "Traditionalist",
+      "Not aligned"
+    )
     .required(),
   dwellingType: Joi.string().valid("urban", "rural").required(),
   familyDwellingType: Joi.string().valid("urban", "rural").required(),

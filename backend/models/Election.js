@@ -93,6 +93,10 @@ const electionSchema = new mongoose.Schema({
           content: { type: String, default: null },
           pdfUploaded: { type: Boolean, default: false },
         },
+        "Religious Affiliation Insight": {
+          content: { type: String, default: null },
+          pdfUploaded: { type: Boolean, default: false },
+        },
         "Consolidated Insight": {
           content: { type: String, default: null },
           pdfUploaded: { type: Boolean, default: false },

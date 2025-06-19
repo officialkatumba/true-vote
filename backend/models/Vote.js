@@ -52,11 +52,36 @@ const voteSchema = new mongoose.Schema({
       "single dad",
     ],
   }, // Marital status categories
+  // religiousStatus: {
+  //   type: String,
+  //   required: true,
+  //   enum: ["not religious", "slightly religious", "very religious"],
+  // },
+  //
+
   religiousStatus: {
     type: String,
+    enum: [
+      "Catholic",
+      "Anglican",
+      "United Church of Zambia (UCZ)",
+      "Methodist",
+      "Protestant (Mainline)",
+      "Pentecostal",
+      "Adventist",
+      "Jehovah’s Witness",
+      "Independent Christian",
+      "Not aligned Christian",
+      "Islamic",
+      "Traditionalist",
+      "Not aligned",
+    ],
     required: true,
-    enum: ["not religious", "slightly religious", "very religious"],
-  }, // Religious affiliation
+    trim: true,
+  },
+
+  // Religious affiliation
+
   dwellingType: { type: String, required: true, enum: ["urban", "rural"] }, // Where the voter lives
   familyDwellingType: {
     type: String,
