@@ -1682,3 +1682,180 @@ ${cleanedCombinedInsights}
     res.status(500).redirect(`/api/insights/${req.params.id}/report`);
   }
 };
+
+exports.generatePoliticalAffiliationInsight = async (req, res) => {
+  try {
+    const { id: electionId } = req.params;
+    const candidateId = req.user.candidate._id.toString();
+
+    const election = await Election.findById(electionId);
+    if (!election) return res.status(404).send("Election not found");
+
+    const isCandidate = election.candidates.some((c) => c.equals(candidateId));
+    if (!isCandidate) return res.status(403).send("Access denied");
+
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate || candidate.membershipStatus !== "active") {
+      return res
+        .status(403)
+        .send("Pay to Get this Insight: Your membership is not active.");
+    }
+
+    const electionContextText = election.electionContext || "";
+
+    const votes = await Vote.find({
+      election: electionId,
+      candidate: candidateId,
+    });
+    const rejections = await Rejection.find({ election: electionId });
+
+    const extractedVotes = votes.map((vote) => ({
+      usualPartySupport: vote.usualPartySupport || "Unknown",
+    }));
+    const extractedRejections = rejections.map((rej) => ({
+      usualPartySupport: rej.usualPartySupport || "Unknown",
+    }));
+
+    const voteBatches = createBatches(extractedVotes, 50);
+    const rejectionBatches = createBatches(extractedRejections, 50);
+
+    let combinedInsights = "";
+
+    for (let i = 0; i < voteBatches.length; i++) {
+      const voteChunk = voteBatches[i];
+      const rejectionChunk = rejectionBatches[i] || [];
+
+      const prompt = `
+You are a political strategist analyzing **Political Affiliation Insight** for voters and non-voters (batch ${
+        i + 1
+      }) for candidate ${candidate.name}.
+
+Focus on:
+- Which parties the voters and rejectors usually support (usualPartySupport)
+- Whether the candidate is pulling support away from specific parties
+- Patterns of rejection based on party loyalty
+- Strategic implications: which party bases are being influenced or alienated
+
+Election Region: ${election.willRunIn}
+Election Context: ${electionContextText}
+
+Voter Records:
+${JSON.stringify(voteChunk, null, 2)}
+
+Rejection Records:
+${JSON.stringify(rejectionChunk, null, 2)}
+`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-16k",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      combinedInsights += `\n\n${completion.choices[0].message.content.trim()}`;
+    }
+
+    const cleanedCombinedInsights = combinedInsights
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+    const summaryPrompt = `
+You are a senior political strategist. Summarize the following batch-wise insights into a **unified Political Affiliation Insight Report** for candidate ${candidate.name}.
+
+Do NOT mention batch numbers. Focus on:
+- Which political parties the candidate is gaining or losing traction with
+- Whether the campaign is pulling voters from traditional party lines
+- Patterns and strategic takeaways
+- What parties are most at risk of losing support to this candidate
+- Based on these patterns, which political party or parties the candidate should consider aligning with — or distancing from — to maximize strategic positioning in future campaigns
+- Suggest specific strategic actions the candidate should take now to strengthen their competitive edge ahead of the 2026 parliamentary elections
+
+Election Region: ${election.willRunIn}
+Election Context: ${electionContextText}
+
+Insight Batches:
+${cleanedCombinedInsights}
+`;
+
+    const finalCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo-16k",
+      messages: [{ role: "user", content: summaryPrompt }],
+      temperature: 0.7,
+      max_tokens: 3000,
+    });
+
+    const aiContent = finalCompletion.choices[0].message.content.trim();
+
+    // Save to DB
+    if (!election.aiInsights.has(candidateId)) {
+      election.aiInsights.set(candidateId, {});
+    }
+    const candidateInsights = election.aiInsights.get(candidateId);
+    candidateInsights["Political Affiliation Insight"] = {
+      content: aiContent,
+      pdfUploaded: false,
+    };
+    election.aiInsights.set(candidateId, candidateInsights);
+    await election.save();
+
+    // Generate PDF
+    const fileName = `political_${electionId}_${candidateId}.pdf`;
+    const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+    const storagePath = `allinsights/${fileName}`;
+
+    if (!fs.existsSync(path.dirname(localPath))) {
+      fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    }
+
+    try {
+      await generateInsightPDF({
+        sectionTitle: "Political Affiliation Insight",
+        content: aiContent,
+        filePath: localPath,
+        electionDetails: {
+          type: election.type,
+          electionNumber: election.electionNumber,
+          startDate: election.endDate,
+        },
+      });
+
+      const [bucketExists] = await bucket.exists();
+      if (!bucketExists) throw new Error("Bucket missing or no permissions");
+
+      await bucket.upload(localPath, {
+        destination: storagePath,
+        gzip: true,
+        metadata: { cacheControl: "public, max-age=31536000" },
+      });
+
+      const updatedCandidateInsights = election.aiInsights.get(candidateId);
+      updatedCandidateInsights[
+        "Political Affiliation Insight"
+      ].pdfUploaded = true;
+      election.aiInsights.set(candidateId, updatedCandidateInsights);
+      await election.save();
+
+      console.log(`PDF uploaded: ${storagePath}`);
+    } catch (err) {
+      console.error("PDF upload failed:", err.message);
+      const updatedCandidateInsights = election.aiInsights.get(candidateId);
+      updatedCandidateInsights[
+        "Political Affiliation Insight"
+      ].pdfUploaded = false;
+      election.aiInsights.set(candidateId, updatedCandidateInsights);
+      await election.save();
+    }
+
+    if (fs.existsSync(localPath)) {
+      fs.unlink(localPath, (err) => {
+        if (err) console.warn("PDF cleanup failed:", err);
+      });
+    }
+
+    res.redirect(`/api/insights/${electionId}/report`);
+  } catch (err) {
+    console.error("Error in generatePoliticalAffiliationInsight:", err);
+    res.status(500).redirect(`/api/insights/${req.params.id}/report`);
+  }
+};

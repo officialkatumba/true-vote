@@ -25,7 +25,8 @@
     "Economic Factors",
     "Policy Awareness & Political Behavior",
     "Sentiment & Expectations",
-    "Religious Affiliation Insight" // ← Add this line
+    "Religious Affiliation Insight",
+    "Political Affiliation Insight" 
   ];
   const allGenerated = insights && requiredSections.every(key => insights[key]?.content);
 %>
@@ -457,6 +458,71 @@
     <% } %>
   </div>
 </div>
+
+<div class="card shadow-lg mb-4 border-0">
+  <div
+    class="card-header text-white py-3 position-relative"
+    style="background: linear-gradient(90deg, #1e3c72, #2a5298)"
+  >
+    <h5 class="mb-0">
+      <i class="fas fa-users me-2"></i>Voters' Political Affiliation Insight Analysis
+    </h5>
+    <% if (insights && insights["Political Affiliation Insight"]?.pdfUploaded) { %>
+    <span class="pdf-badge badge bg-light text-dark">
+      <i class="fas fa-file-pdf me-1"></i>PDF Ready
+    </span>
+    <% } %>
+  </div>
+
+  <div class="card-body">
+    <% if (insights && insights["Political Affiliation Insight"]?.content) { %>
+    <div class="alert alert-success text-center">
+      <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+      <h5 class="mt-2">Insight Generated</h5>
+      <a
+        href="/api/insights/view/political_<%= election._id %>_<%= currentCandidateId %>.pdf"
+        class="btn btn-outline-primary btn-sm mt-2"
+        target="_blank"
+      >
+        <i class="fas fa-eye me-1"></i> View PDF Report
+      </a>
+    </div>
+
+    <% } else if (election.electionStatus === 'completed') { %>
+    <% if (candidate.membershipStatus === 'active') { %>
+    <div class="alert alert-warning text-center">
+      <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+      <h5 class="mt-2">Insight Not Generated Yet</h5>
+      <form
+        method="POST"
+        action="/api/insights/<%= election._id %>/generate-political"
+      >
+        <button class="btn btn-dark btn-sm">
+          <i class="fas fa-magic me-1"></i> Generate Insight
+        </button>
+      </form>
+    </div>
+    <% } else { %>
+    <div class="alert alert-danger text-center">
+      <i class="fas fa-lock fa-3x text-danger mb-2"></i>
+      <h5 class="mt-2">Pay to Get this Insight</h5>
+      <p>
+        Your membership status is
+        <strong><%= candidate.membershipStatus %></strong>. Please upgrade to
+        generate insights.
+      </p>
+    </div>
+    <% } %>
+    <% } else { %>
+    <div class="alert alert-secondary text-center">
+      <i class="fas fa-info-circle fa-3x text-secondary mb-2"></i>
+      <h5 class="mt-2">Insight Generation Available</h5>
+      <p>After election completion</p>
+    </div>
+    <% } %>
+  </div>
+</div>
+
 
 
 <div class="card shadow-lg mb-4 border-0">
