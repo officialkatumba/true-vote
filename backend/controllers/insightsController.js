@@ -1769,7 +1769,7 @@ Do NOT mention batch numbers. Focus on:
 - Patterns and strategic takeaways
 - What parties are most at risk of losing support to this candidate
 - Based on these patterns, which political party or parties the candidate should consider aligning with — or distancing from — to maximize strategic positioning in future campaigns
-- Suggest specific strategic actions the candidate should take now to strengthen their competitive edge ahead of the 2026 parliamentary elections
+- Suggest specific strategic actions the candidate should take now to strengthen their competitive edge ahead of the 2026  elections
 
 Election Region: ${election.willRunIn}
 Election Context: ${electionContextText}
