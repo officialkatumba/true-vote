@@ -177,6 +177,7 @@ Focus on:
 - Age
 - Gender
 - Marital status
+- Do not mention any batch number
 
 Incorporate the candidate-submitted election context and identify any useful patterns.
 
@@ -210,7 +211,7 @@ You are a senior political strategist. Below are multiple demographic insight ba
 
 Your task is to synthesize them into **one cohesive, 4-page strategic report**. Eliminate redundancy, resolve contradictions, and unify the voice and tone. Structure the final result as a polished insight suitable for a professional campaign briefing.
 
-And do not mention any batches as we want  a clear and unified document.
+And do not mention any batches  as we want  a clear and unified document.
 
 Clearly identify the demographic groups most likely to support or oppose the candidate, and suggest actionable strategies the candidate can use to increase their chances of winning the 2026 elections in ${election.willRunIn}.
 
@@ -545,7 +546,6 @@ exports.generateLivingInsight = async (req, res) => {
     const livingFields = [
       "dwellingType",
       "familyDwellingType",
-      "religiousStatus",
       "votingEligibility2026",
     ];
 
@@ -1097,12 +1097,7 @@ exports.generateSentimentInsight = async (req, res) => {
     });
     const rejections = await Rejection.find({ election: electionId });
 
-    const sentimentFields = [
-      "dislikesAboutCandidate",
-      "expectationsFromCandidate",
-      "reasonForVoting",
-      "usualPartySupport",
-    ];
+    const sentimentFields = ["expectationsFromCandidate", "reasonForVoting"];
     const extractedVotes = votes.map((vote) =>
       sentimentFields.reduce((acc, field) => {
         acc[field] = vote[field] ?? null;
@@ -1133,7 +1128,6 @@ You are a political psychologist. Analyze **Voter Sentiment & Expectations** for
       }** in batch ${i + 1}.
 
 Focus on:
-- Dislikes about the candidate
 - Expectations and hopes
 - Common reasons for voting or rejecting
 - Party loyalty vs candidate support
@@ -1283,6 +1277,8 @@ exports.generateConsolidatedInsight = async (req, res) => {
       "Economic Factors",
       "Policy Awareness & Political Behavior",
       "Sentiment & Expectations",
+      "Religious Affiliation Insight",
+      "Political Affiliation Insight",
     ];
 
     const combinedContent = sections
