@@ -177,7 +177,7 @@ Focus on:
 - Age
 - Gender
 - Marital status
-- Do not mention any batch number
+- Do not mention any batch number at all
 
 Incorporate the candidate-submitted election context and identify any useful patterns.
 
